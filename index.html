@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMBER - Nền tảng học tiếng Anh</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Quill.js (Rich Text Editor) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <!-- Chart.js (Biểu đồ) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- JSZip & FileSaver (Tải file hàng loạt) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Bật dark mode
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        amber: { 50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
+                        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Tùy chỉnh thanh cuộn tinh tế - Dark Mode */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Ẩn phần tử */
+        .hidden { display: none !important; }
+
+        /* Tùy chỉnh bộ soạn thảo Quill cho Dark Mode */
+        .ql-toolbar.ql-snow { 
+            border: 1px solid #334155 !important; 
+            border-radius: 0.75rem 0.75rem 0 0 !important; 
+            font-family: 'Inter', sans-serif; 
+            background-color: #1e293b; 
+        }
+        .ql-toolbar .ql-stroke { stroke: #94a3b8 !important; }
+        .ql-toolbar .ql-fill { fill: #94a3b8 !important; }
+        .ql-toolbar .ql-picker { color: #94a3b8 !important; }
+        
+        .ql-container.ql-snow { 
+            border: 1px solid #334155 !important; 
+            border-top: none !important; 
+            border-radius: 0 0 0.75rem 0.75rem !important; 
+            min-height: 250px; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 16px; 
+            color: #f1f5f9;
+            background-color: #0f172a;
+        }
+        
+        /* Khôi phục list-style cho Quill Editor hiển thị đúng Bullets/Numbers */
+        .ql-editor ol { padding-left: 1.5em; list-style-type: decimal; }
+        .ql-editor ul { padding-left: 1.5em; list-style-type: disc; }
+        .ql-editor::before { color: #64748b !important; font-style: normal !important; }
+
+        /* Hiệu ứng lật thẻ Flashcard (3D) */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flashcard-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+
+        /* Style chung cho Input và Select trong Dark Mode */
+        input[type="text"], input[type="password"], input[type="date"], input[type="url"], select, textarea {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #f59e0b !important;
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+        }
+    </style>
+</head>
+<!-- Kích hoạt Dark Mode từ body -->
+<body class="bg-slate-950 text-slate-200 font-sans antialiased overflow-hidden h-screen flex flex-col transition-colors duration-200">
+    
+    <!-- ================= TOAST NOTIFICATION ================= -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[99] flex flex-col gap-3"></div>
+
+    <!-- ================= MÀN HÌNH KHỞI TẠO ================= -->
+    <div id="init-screen" class="hidden fixed inset-0 bg-slate-950 z-[80] flex flex-col items-center justify-center">
+        <div class="text-center w-full max-w-md px-6 bg-slate-900 p-10 rounded-3xl border border-slate-800 shadow-2xl">
+            <div class="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                <i class="fa-solid fa-database text-4xl text-amber-500"></i>
+            </div>
+            <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 mb-2 tracking-tight">AMBER</h1>
+            <p class="text-slate-400 mb-8 font-medium">Nền tảng học tiếng Anh thông minh</p>
+            <h2 class="text-xl font-bold mb-3 text-slate-200">Đang khởi tạo cơ sở dữ liệu...</h2>
+            <p id="init-status-text" class="text-sm text-slate-400 mb-4">Đang thiết lập hệ thống (0/73 user)</p>
+            <div class="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden border border-slate-700">
+                <div id="init-progress-bar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-300 shadow-[0_0_10px_#f59e0b]" style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-amber-400/80 font-medium bg-amber-900/20 border border-amber-900/50 py-2 px-4 rounded-lg inline-block">Vui lòng không đóng trình duyệt. Mất khoảng 2-3 phút.</p>
+        </div>
+    </div>
+
+    <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
+    <div id="login-screen" class="hidden fixed inset-0 bg-slate-950 z-[60] flex items-center justify-center p-4 relative overflow-hidden">
+        <!-- Abstract Background -->
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-amber-600/20 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-orange-600/20 rounded-full blur-[100px]"></div>
+
+        <div class="bg-slate-900/80 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-slate-700/50 relative z-10">
+            <div class="text-center mb-10">
+                <h1 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 mb-3 tracking-tight drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">AMBER</h1>
+                <p class="text-slate-400 font-medium">Chào mừng bạn quay lại hệ thống</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Tên đăng nhập</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-slate-500"></i>
+                        </div>
+                        <input type="text" id="login-username" required class="w-full pl-11 pr-4 py-3.5 bg-slate-950 border border-slate-700 rounded-xl outline-none transition-all text-slate-200 placeholder-slate-600" placeholder="VD: gv.hangnga hoặc binh.an_10a1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Mật khẩu</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-slate-500"></i>
+                        </div>
+                        <input type="password" id="login-password" required class="w-full pl-11 pr-12 py-3.5 bg-slate-950 border border-slate-700 rounded-xl outline-none transition-all text-slate-200 placeholder-slate-600" placeholder="••••••••">
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-amber-500 transition-colors">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 flex justify-center items-center text-lg mt-4">
+                    <span>Đăng nhập</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MÀN HÌNH ĐỔI MẬT KHẨU ================= -->
+    <div id="change-pw-screen" class="hidden fixed inset-0 bg-slate-950 z-[60] flex items-center justify-center p-4">
+        <div class="bg-slate-900 p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-slate-800 relative z-10">
+            <div class="w-16 h-16 bg-red-900/30 text-red-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl border border-red-800/50 shadow-[0_0_15px_rgba(248,113,113,0.2)]">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-3 text-center">Bảo vệ tài khoản</h2>
+            <p class="text-slate-400 text-sm mb-8 text-center font-medium leading-relaxed">Đây là lần đăng nhập đầu tiên hoặc bạn được cấp lại mật khẩu. Vui lòng đổi mật khẩu.</p>
+            <form id="change-pw-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Mật khẩu mới</label>
+                    <input type="password" id="new-password" required minlength="6" class="w-full px-4 py-3.5 bg-slate-950 border border-slate-700 rounded-xl outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirm-password" required minlength="6" class="w-full px-4 py-3.5 bg-slate-950 border border-slate-700 rounded-xl outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 mt-4">Cập nhật & Vào App</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= LAYOUT CHÍNH (APP) ================= -->
+    <div id="app-layout" class="hidden flex h-screen w-full bg-slate-950">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="bg-slate-900 border-r border-slate-800 w-72 flex-shrink-0 flex flex-col transition-transform duration-300 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-[40]">
+            <!-- Logo -->
+            <div class="h-20 flex items-center justify-between px-6 border-b border-slate-800 flex-shrink-0">
+                <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 tracking-tight">AMBER</h1>
+                <button id="btn-close-sidebar" class="text-slate-400 hover:text-white md:hidden bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <!-- User Info -->
+            <div class="px-6 py-8 border-b border-slate-800 flex flex-col items-center">
+                <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-600 text-white rounded-full flex items-center justify-center text-2xl font-black mb-3 shadow-[0_0_15px_rgba(245,158,11,0.5)] border-2 border-slate-900">
+                    <span id="nav-user-initial">A</span>
+                </div>
+                <h3 id="nav-user-name" class="font-bold text-slate-200 text-center text-[15px] mb-1">Loading...</h3>
+                <span id="nav-user-role" class="text-[11px] font-bold px-3 py-1 bg-slate-800 border border-slate-700 text-amber-400 rounded-full uppercase tracking-wider">Role</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav id="nav-menu" class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                <!-- Sẽ được render động bằng JS -->
+            </nav>
+
+            <!-- Logout -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900">
+                <button id="btn-logout" class="flex items-center justify-center w-full px-4 py-3 text-red-400 font-semibold hover:bg-red-900/30 hover:text-red-300 rounded-xl transition-colors border border-transparent hover:border-red-900/50">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-950">
+            
+            <!-- Overlay for mobile sidebar -->
+            <div id="sidebar-overlay" class="hidden fixed inset-0 bg-slate-950/80 z-[35] backdrop-blur-sm md:hidden transition-opacity"></div>
+
+            <!-- HEADER -->
+            <header class="h-20 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-30 sticky top-0">
+                <div class="flex items-center">
+                    <button id="btn-open-sidebar" class="mr-4 text-slate-400 hover:text-amber-400 bg-slate-800 w-10 h-10 rounded-xl flex items-center justify-center md:hidden transition-colors border border-slate-700">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <h2 id="header-title" class="text-xl font-bold text-slate-200 hidden sm:block">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div id="header-week-info" class="hidden md:flex flex-col items-end border-r border-slate-700 pr-6">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Tuần hiện tại</span>
+                        <span id="header-week-name" class="text-sm font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1 rounded-lg">Đang tải...</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold shadow-[0_0_10px_rgba(245,158,11,0.5)] border border-slate-800" id="header-avatar">A</div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE VIEWS CONTAINER -->
+            <div id="views-container" class="flex-1 overflow-y-auto p-4 sm:p-8 pb-24 scroll-smooth">
+                
+                <!-- ================= VÙNG HIỂN THỊ GIÁO VIÊN / ADMIN ================= -->
+
+                <!-- View: Teacher Dashboard -->
+                <div id="view-teacher-dashboard" class="view-section hidden space-y-8">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-100 tracking-tight">Tổng quan hệ thống</h2>
+                        <p class="text-slate-400 mt-1 font-medium">Theo dõi tiến độ nộp bài và tương tác của học sinh.</p>
+                    </div>
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col justify-center relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-900/30 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                            <p class="text-sm font-semibold text-slate-400 relative z-10">Tổng học sinh</p>
+                            <h3 class="text-4xl font-black text-slate-100 mt-2 relative z-10" id="td-total-students">0</h3>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col justify-center relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-green-900/30 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                            <p class="text-sm font-semibold text-slate-400 relative z-10">Đã nộp bài tuần này</p>
+                            <h3 class="text-4xl font-black text-green-400 mt-2 relative z-10"><span id="td-submitted">0</span><span class="text-lg text-slate-500 font-medium ml-1">/ 70</span></h3>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col justify-center relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-red-900/30 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                            <p class="text-sm font-semibold text-slate-400 relative z-10">Chưa nộp bài</p>
+                            <h3 class="text-4xl font-black text-red-500 mt-2 relative z-10" id="td-not-submitted">0</h3>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col justify-center relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-900/30 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                            <p class="text-sm font-semibold text-slate-400 relative z-10">Q&A chưa giải đáp</p>
+                            <h3 class="text-4xl font-black text-amber-500 mt-2 relative z-10" id="td-qa-unanswered">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Chart & Countdown -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-bold text-slate-200 text-lg">Điểm trung bình toàn lớp theo tuần</h3>
+                                <div class="w-8 h-8 rounded bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400"><i class="fa-solid fa-chart-line"></i></div>
+                            </div>
+                            <div class="relative h-72 w-full">
+                                <canvas id="teacher-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl shadow-lg border border-amber-700/50 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                            <i class="fa-regular fa-clock absolute text-9xl opacity-5 text-amber-500 -right-4 -bottom-4"></i>
+                            <h3 class="font-bold text-slate-300 mb-3 opacity-90 text-lg relative z-10">Deadline tuần này</h3>
+                            <div class="text-4xl sm:text-5xl font-black mb-4 font-mono tracking-wider relative z-10 text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" id="td-countdown">--:--:--</div>
+                            <p class="text-sm font-medium text-slate-400 bg-slate-950/50 px-4 py-1.5 rounded-full relative z-10 border border-slate-800">Kết thúc lúc 21:00 Chủ nhật</p>
+                            <button onclick="document.getElementById('nav-teacher-grading').click()" class="mt-8 bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all duration-200 relative z-10 w-full sm:w-auto">Chấm bài ngay</button>
+                        </div>
+                    </div>
+
+                    <!-- Missing Students -->
+                    <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
+                        <div class="flex items-center mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-red-900/30 flex items-center justify-center text-red-400 mr-4 border border-red-800/50">
+                                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-200 text-lg">Danh sách Học sinh chưa nộp bài</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="td-missing-list">
+                            <!-- JS render -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Quản lý tuần học -->
+                <div id="view-teacher-weeks" class="view-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Quản lý Tuần Học</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Tạo và thiết lập deadline cho các tuần học.</p>
+                        </div>
+                        <button id="btn-show-create-week" class="bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] transform hover:-translate-y-0.5 px-5 py-2.5 rounded-xl font-bold transition-all duration-200 whitespace-nowrap">
+                            <i class="fa-solid fa-plus mr-2"></i> Tạo tuần mới
+                        </button>
+                    </div>
+                    <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-700">
+                                <thead class="bg-slate-900/80">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Tên tuần</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Thời gian</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Thang điểm</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-slate-800 divide-y divide-slate-700 text-sm font-medium" id="table-weeks">
+                                    <!-- JS render -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Tài liệu học -->
+                <div id="view-teacher-materials" class="view-section hidden space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Tài liệu học tập</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Quản lý bài giảng và file nghe/đọc.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <select id="filter-material-week" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-200 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none min-w-[150px]"></select>
+                            <select id="filter-material-class" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-200 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none">
+                                <option value="ALL">Tất cả lớp</option>
+                                <option value="10ANH1">10 Anh 1</option>
+                                <option value="10ANH2">10 Anh 2</option>
+                            </select>
+                            <button id="btn-show-upload-material" class="bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] transform hover:-translate-y-0.5 px-5 py-2.5 rounded-xl font-bold transition-all duration-200 whitespace-nowrap">
+                                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Storage & Bulk Download Bar -->
+                    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center text-sm shadow-sm gap-3">
+                        <div class="flex items-center text-slate-400 font-medium">
+                            <div class="w-8 h-8 rounded bg-slate-900 border border-slate-700 flex items-center justify-center mr-3 text-amber-500"><i class="fa-solid fa-hard-drive"></i></div>
+                            <span>Tổng bộ nhớ đã dùng: <strong id="storage-used" class="text-slate-200 ml-1">0 MB</strong></span>
+                        </div>
+                        <button id="btn-download-all-materials" class="flex items-center text-blue-400 hover:text-blue-300 font-bold bg-blue-900/30 border border-blue-800/50 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center">
+                            <i class="fa-solid fa-file-zipper mr-2"></i> Tải về tất cả (ZIP)
+                        </button>
+                    </div>
+
+                    <!-- Materials Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="grid-materials-teacher">
+                        <!-- JS render -->
+                    </div>
+                </div>
+
+                <!-- View: Chấm điểm -->
+                <div id="view-teacher-grading" class="view-section hidden space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Chấm điểm bài nộp</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Đánh giá 5 kỹ năng và phản hồi học sinh.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-sm">
+                            <select id="filter-grade-week" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer"></select>
+                            <div class="w-px bg-slate-700 hidden sm:block"></div>
+                            <select id="filter-grade-class" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
+                                <option value="ALL">Cả 2 lớp</option>
+                                <option value="10ANH1">10 Anh 1</option>
+                                <option value="10ANH2">10 Anh 2</option>
+                            </select>
+                            <div class="w-px bg-slate-700 hidden sm:block"></div>
+                            <select id="filter-grade-status" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
+                                <option value="ALL">Tất cả bài</option>
+                                <option value="UNGRADED">Chưa chấm</option>
+                                <option value="GRADED">Đã chấm</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-700">
+                                <thead class="bg-slate-900/80">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Học sinh</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Lớp</th>
+                                        <th class="px-4 py-4 text-center text-xs font-bold text-slate-400 uppercase">L</th>
+                                        <th class="px-4 py-4 text-center text-xs font-bold text-slate-400 uppercase">S</th>
+                                        <th class="px-4 py-4 text-center text-xs font-bold text-slate-400 uppercase">R</th>
+                                        <th class="px-4 py-4 text-center text-xs font-bold text-slate-400 uppercase">W</th>
+                                        <th class="px-4 py-4 text-center text-xs font-bold text-slate-400 uppercase">V</th>
+                                        <th class="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-slate-800 divide-y divide-slate-700 text-sm font-medium" id="table-grading">
+                                    <!-- JS render -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ================= VÙNG HIỂN THỊ HỌC SINH ================= -->
+
+                <!-- View: Student Dashboard -->
+                <div id="view-student-dashboard" class="view-section hidden space-y-6">
+                    <!-- Welcome Banner -->
+                    <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-orange-700 rounded-3xl p-8 sm:p-10 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.5)] border border-amber-500/30 relative overflow-hidden text-white flex justify-between items-center">
+                        <div class="relative z-10">
+                            <h2 class="text-3xl sm:text-4xl font-black mb-2 tracking-tight drop-shadow-md">Xin chào, <span id="sd-fullname">Học sinh</span>! 👋</h2>
+                            <p class="text-amber-100 font-medium text-lg drop-shadow-sm">Lớp: <span id="sd-class" class="font-bold text-white px-2 py-0.5 bg-black/30 rounded-md mx-1 border border-white/20"></span> | Hãy tiếp tục nỗ lực nhé!</p>
+                        </div>
+                        <div class="hidden sm:block absolute right-0 top-0 h-full w-1/3 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at right, white 10%, transparent 50%);"></div>
+                        <i class="fa-solid fa-graduation-cap text-7xl opacity-20 absolute -right-4 -bottom-4 transform -rotate-12 z-0"></i>
+                    </div>
+                    
+                    <!-- Tuần & Nộp bài Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tuần học info -->
+                        <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col justify-between group hover:border-amber-500/50 transition-colors">
+                            <div>
+                                <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Tuần học hiện tại</h3>
+                                <h2 class="text-2xl font-black text-slate-100" id="sd-current-week">Đang tải...</h2>
+                                <p class="text-sm text-slate-400 mt-2 font-medium"><i class="fa-regular fa-clock mr-1.5 text-amber-500"></i> Deadline: Chủ nhật lúc 21:00</p>
+                            </div>
+                            <div class="mt-6 bg-slate-900 rounded-2xl p-4 text-center border border-slate-700 group-hover:bg-amber-900/20 group-hover:border-amber-700/50 transition-colors shadow-inner">
+                                <span class="text-slate-300 group-hover:text-amber-400 font-mono text-3xl font-black tracking-widest transition-colors drop-shadow-sm" id="sd-countdown">--:--:--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Card -->
+                        <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                            <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-4">Trạng thái bài tập</h3>
+                            <div id="sd-status-icon" class="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 bg-slate-900 text-slate-500 border border-slate-700 shadow-inner">
+                                <i class="fa-solid fa-file-circle-question"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-slate-100" id="sd-status-text">Chưa nộp bài</h2>
+                            <button onclick="document.getElementById('nav-student-submission').click()" class="mt-5 text-amber-400 font-bold hover:text-amber-300 bg-amber-900/30 border border-amber-900/50 px-5 py-2.5 rounded-full transition-colors text-sm w-full sm:w-auto">Đến trang nộp bài <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Biểu đồ -->
+                    <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700">
+                        <div class="flex items-center mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-amber-900/30 border border-amber-800/50 flex items-center justify-center text-amber-500 mr-4 shadow-sm">
+                                <i class="fa-solid fa-chart-line text-lg"></i>
+                            </div>
+                            <h3 class="font-black text-slate-100 text-xl tracking-tight">Tiến độ điểm số của bạn</h3>
+                        </div>
+                        <div class="relative h-80 w-full">
+                            <canvas id="student-progress-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Student Nộp bài & Xem điểm -->
+                <div id="view-student-submission" class="view-section hidden space-y-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-100 tracking-tight">Nộp bài & Xem điểm</h2>
+                        <p class="text-slate-400 mt-1 font-medium">Gửi bài viết, file đính kèm và xem đánh giá từ giáo viên.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Form nộp bài (Chiếm 7 cột) -->
+                        <div class="lg:col-span-7 bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col">
+                            <h3 class="font-bold text-slate-200 text-lg border-b border-slate-700 pb-4 mb-6 flex items-center">
+                                <i class="fa-solid fa-pen-nib text-amber-500 mr-2"></i> Bài làm Tuần này
+                            </h3>
+                            
+                            <!-- Báo hết hạn -->
+                            <div id="sub-locked-msg" class="hidden bg-red-900/30 text-red-400 border border-red-800/50 p-4 rounded-xl text-sm mb-6 font-medium flex items-center shadow-sm">
+                                <i class="fa-solid fa-lock text-lg mr-3"></i> Đã hết hạn. Bạn không thể thay đổi bài làm của tuần này.
+                            </div>
+
+                            <form id="submission-form" class="space-y-6 flex-1 flex flex-col">
+                                <div class="flex-1 flex flex-col">
+                                    <label class="block text-sm font-bold text-slate-300 mb-2">1. Bài viết (Text/Essay)</label>
+                                    <div id="editor-container" class="bg-slate-900 flex-1 rounded-xl shadow-inner"></div>
+                                </div>
+                                
+                                <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                                    <label class="block text-sm font-bold text-slate-300 mb-3">2. Đính kèm File (Âm thanh/Video/PDF)</label>
+                                    
+                                    <div class="relative">
+                                        <input type="file" id="sub-file-input" class="w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 transition-colors bg-slate-800 border border-slate-600 rounded-xl cursor-pointer">
+                                    </div>
+                                    
+                                    <div class="mt-5 flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider my-3">
+                                        <div class="flex-1 border-t border-slate-700"></div>
+                                        <span class="px-3 bg-slate-900/50 rounded-full border border-slate-700 mx-2">HOẶC DÁN LINK</span>
+                                        <div class="flex-1 border-t border-slate-700"></div>
+                                    </div>
+                                    
+                                    <div class="relative mt-2">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fa-solid fa-link text-slate-500"></i>
+                                        </div>
+                                        <input type="url" id="sub-link-input" placeholder="Link Google Drive / YouTube (Nên dùng nếu file > 50MB)" class="w-full pl-10 pr-4 py-3 text-sm bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-slate-200 font-medium placeholder-slate-500">
+                                    </div>
+                                    
+                                    <!-- Thanh upload -->
+                                    <div id="sub-upload-progress-container" class="hidden mt-4 bg-slate-800 p-3 rounded-xl border border-amber-700/50 shadow-sm">
+                                        <div class="flex justify-between text-xs font-bold mb-1.5 text-slate-300">
+                                            <span><i class="fa-solid fa-spinner fa-spin text-amber-500 mr-1"></i> Đang tải file lên đám mây...</span>
+                                            <span id="sub-upload-percent" class="text-amber-400">0%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700">
+                                            <div id="sub-upload-bar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-300 shadow-[0_0_10px_#f59e0b]" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="btn-submit-work" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 mt-2 text-lg">Nộp bài & Lưu thay đổi</button>
+                            </form>
+                        </div>
+
+                        <!-- Điểm (Chiếm 5 cột) -->
+                        <div class="lg:col-span-5 bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col">
+                            <h3 class="font-bold text-slate-200 text-lg border-b border-slate-700 pb-4 mb-6 flex items-center">
+                                <i class="fa-solid fa-star text-amber-500 mr-2"></i> Kết quả chấm điểm
+                            </h3>
+                            <div id="sub-grades-container" class="flex-1 flex flex-col items-center justify-center text-center text-slate-400 py-10 bg-slate-900/50 rounded-2xl border border-slate-700 border-dashed">
+                                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner border border-slate-700">
+                                    <i class="fa-solid fa-hourglass-half text-amber-500/50"></i>
+                                </div>
+                                <p class="font-medium text-sm">Giáo viên chưa chấm bài tuần này.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Peer view -->
+                    <div class="bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 mt-8">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700 pb-4">
+                            <h3 class="font-bold text-slate-200 text-lg flex items-center">
+                                <i class="fa-solid fa-users-viewfinder text-amber-500 mr-2"></i> Bài nộp & Điểm của lớp
+                            </h3>
+                            <select id="filter-peer-week" class="border border-slate-700 bg-slate-900 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none"></select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-700">
+                                <thead class="bg-slate-900/80">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase">Học sinh</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase">Lớp</th>
+                                        <th class="px-2 py-3 text-center text-xs font-bold text-slate-400 uppercase">L</th>
+                                        <th class="px-2 py-3 text-center text-xs font-bold text-slate-400 uppercase">S</th>
+                                        <th class="px-2 py-3 text-center text-xs font-bold text-slate-400 uppercase">R</th>
+                                        <th class="px-2 py-3 text-center text-xs font-bold text-slate-400 uppercase">W</th>
+                                        <th class="px-2 py-3 text-center text-xs font-bold text-slate-400 uppercase">V</th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-400 uppercase">Tham khảo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-slate-800 divide-y divide-slate-700 text-sm font-medium" id="table-peer-submissions">
+                                    <!-- JS render -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Student Từ vựng -->
+                <div id="view-student-vocab" class="view-section hidden space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Kho từ vựng cá nhân</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Ghi chú và ôn tập bằng Flashcard, Quiz.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <button id="btn-show-add-vocab" class="bg-slate-800 text-slate-200 border border-slate-600 hover:border-amber-500 shadow-sm px-4 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap">
+                                <i class="fa-solid fa-plus text-amber-500 mr-1.5"></i> Thêm từ mới
+                            </button>
+                            <button id="btn-play-flashcard" class="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] transform hover:-translate-y-0.5 px-4 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap">
+                                <i class="fa-solid fa-clone mr-1.5"></i> Luyện Flashcard
+                            </button>
+                            <button id="btn-play-quiz" class="bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.4)] transform hover:-translate-y-0.5 px-4 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap">
+                                <i class="fa-solid fa-gamepad mr-1.5"></i> Chơi trắc nghiệm
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800 rounded-3xl shadow-lg border border-slate-700 p-6 sm:p-8 min-h-[400px]">
+                        <!-- Grid chứa danh sách từ vựng -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5" id="grid-vocabulary">
+                            <!-- Sẽ được điền bằng JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= VÙNG HIỂN THỊ CHUNG (Q&A) ================= -->
+                <div id="view-shared-qa" class="view-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Hỏi đáp & Giải đáp (Q&A)</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Không gian thảo luận và giải đáp thắc mắc bài học.</p>
+                        </div>
+                        <select id="filter-qa-week" class="border border-slate-700 bg-slate-900 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none w-full sm:w-auto shadow-sm"></select>
+                    </div>
+                    
+                    <!-- Form đặt câu hỏi (Chỉ Student) -->
+                    <div id="qa-ask-container" class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-amber-700/50 hidden">
+                        <h3 class="text-sm font-bold text-amber-500 mb-3 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-comment-dots mr-2 text-lg"></i> Gửi câu hỏi cho Giáo viên
+                        </h3>
+                        <textarea id="qa-input-text" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm font-medium text-slate-200 focus:ring-2 focus:ring-amber-500 mb-3 shadow-inner resize-none outline-none placeholder-slate-600" placeholder="Bạn chưa hiểu phần nào? Gõ câu hỏi vào đây nhé..."></textarea>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="relative w-full sm:w-auto hidden">
+                                <!-- Chỗ này có thể mở rộng upload ảnh sau -->
+                            </div>
+                            <button id="btn-submit-qa" class="bg-amber-500 text-slate-950 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transform hover:-translate-y-0.5 transition-all w-full sm:w-auto whitespace-nowrap ml-auto">Gửi câu hỏi</button>
+                        </div>
+                    </div>
+
+                    <!-- Luồng câu hỏi -->
+                    <div id="qa-thread-list" class="space-y-5">
+                        <!-- JS render -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS (POPUP & DRAWERS) ================= -->
+
+    <!-- Backdrop -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-950/80 z-[60] backdrop-blur-sm transition-opacity duration-300"></div>
+
+    <!-- 1. Modal: Tạo Tuần (Giáo viên) -->
+    <div id="modal-create-week" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-md overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+            <h3 class="font-black text-slate-100 text-lg">Tạo Tuần Học Mới</h3>
+            <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-create-week" class="p-6 space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Tên tuần (VD: Tuần 1 - 23/09)</label>
+                <input type="text" id="cw-name" required class="w-full px-4 py-2.5 text-sm font-medium">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Ngày bắt đầu</label>
+                    <input type="date" id="cw-start" required class="w-full px-4 py-2.5 text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Hạn chót (CN)</label>
+                    <input type="date" id="cw-end" required class="w-full px-4 py-2.5 text-sm font-medium">
+                </div>
+            </div>
+            <p class="text-[11px] font-bold text-amber-500 uppercase mt-[-10px]">Lưu ý: Mặc định khóa form vào 21:00 ngày kết thúc.</p>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Thang điểm áp dụng</label>
+                <select id="cw-scale" class="w-full px-4 py-2.5 text-sm font-medium">
+                    <option value="10">Thang điểm 10</option>
+                    <option value="100">Thang điểm 100</option>
+                </select>
+            </div>
+            <div class="pt-4 flex justify-end gap-3 mt-2">
+                <button type="button" class="btn-close-modal px-5 py-2.5 text-slate-300 font-bold bg-slate-700 rounded-xl hover:bg-slate-600 transition-colors">Hủy</button>
+                <button type="submit" class="px-6 py-2.5 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 font-bold shadow-md transition-colors">Tạo tuần</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. Modal: Đăng Tài liệu (Giáo viên) -->
+    <div id="modal-upload-material" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+            <h3 class="font-black text-slate-100 text-lg">Đăng Tài Liệu Học Tập</h3>
+            <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-upload-material" class="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Chọn Tuần</label>
+                    <select id="um-week" required class="w-full px-4 py-2.5 text-sm font-medium"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Lớp áp dụng</label>
+                    <select id="um-class" required class="w-full px-4 py-2.5 text-sm font-medium">
+                        <option value="ALL">Tất cả (Chung)</option>
+                        <option value="10ANH1">Lớp 10 Anh 1</option>
+                        <option value="10ANH2">Lớp 10 Anh 2</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Tên tài liệu / Bài giảng</label>
+                <input type="text" id="um-title" required class="w-full px-4 py-2.5 text-sm font-medium">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Phân loại Kỹ năng</label>
+                <select id="um-type" required class="w-full px-4 py-2.5 text-sm font-medium">
+                    <option value="listening">Listening (Nghe)</option>
+                    <option value="speaking">Speaking (Nói)</option>
+                    <option value="reading">Reading (Đọc)</option>
+                    <option value="writing">Writing (Viết)</option>
+                    <option value="vocabulary">Vocabulary & Grammar</option>
+                </select>
+            </div>
+            
+            <div class="border border-slate-700 bg-slate-900/50 p-5 rounded-2xl relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+                <label class="block text-sm font-bold text-slate-200 mb-3">Nguồn đính kèm</label>
+                
+                <input type="file" id="um-file" class="w-full text-sm mb-4 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 cursor-pointer text-slate-400 bg-slate-800 border border-slate-700 rounded-xl">
+                
+                <div class="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                    <hr class="flex-1 border-slate-700">HOẶC DÁN LINK<hr class="flex-1 border-slate-700">
+                </div>
+                
+                <input type="url" id="um-link" placeholder="Nhập Link bài tập (Drive/Quizizz...)" class="w-full px-4 py-2.5 text-sm font-medium">
+                
+                <!-- Progress -->
+                <div id="um-progress-container" class="hidden mt-4 bg-slate-800 p-2 border border-slate-700 rounded-xl shadow-sm">
+                    <div class="flex justify-between text-[11px] font-bold text-amber-500 mb-1 px-1">
+                        <span>Đang tải lên...</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-2">
+                        <div id="um-progress-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="w-full px-6 py-3.5 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 font-bold shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all text-lg transform hover:-translate-y-0.5">Xác nhận đăng tài liệu</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 3. Drawer: Chấm điểm (Giáo viên) -->
+    <div id="modal-grade-student" class="modal hidden fixed top-0 right-0 h-full w-full md:w-[650px] bg-slate-900 shadow-[-10px_0_40px_rgba(0,0,0,0.5)] z-[70] transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-800">
+        <div class="px-6 py-5 border-b border-slate-800 flex justify-between items-center bg-slate-950 flex-shrink-0">
+            <div>
+                <h3 class="font-black text-slate-100 text-xl tracking-tight">Hồ sơ chấm điểm</h3>
+                <p class="text-sm font-bold text-amber-500 mt-0.5"><i class="fa-solid fa-user-graduate mr-1"></i> <span id="gs-student-name"></span></p>
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-1" id="gs-week-info"></p>
+            </div>
+            <button class="btn-close-drawer text-slate-400 hover:text-white bg-slate-800 border border-slate-700 w-10 h-10 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right text-lg"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Text Content -->
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                <h4 class="font-bold text-slate-300 text-sm mb-3 flex items-center"><i class="fa-solid fa-align-left text-slate-500 mr-2"></i> Bài viết trực tiếp (Text)</h4>
+                <div id="gs-content-text" class="bg-slate-900 p-4 rounded-xl text-sm whitespace-pre-wrap text-slate-300 border border-slate-700 min-h-[120px] font-medium leading-relaxed"></div>
+            </div>
+
+            <!-- File Attachments -->
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                <h4 class="font-bold text-slate-300 text-sm mb-3 flex items-center"><i class="fa-solid fa-paperclip text-slate-500 mr-2"></i> File / Link đính kèm</h4>
+                <div id="gs-attachments" class="space-y-2">
+                    <!-- JS render -->
+                </div>
+            </div>
+            
+            <!-- Grading Form -->
+            <form id="form-grade" class="bg-amber-900/10 p-6 rounded-2xl border border-amber-900/50 shadow-sm space-y-5">
+                <h4 class="font-black text-amber-500 flex items-center"><i class="fa-solid fa-marker mr-2"></i> Bảng điểm & Nhận xét</h4>
+                <p class="text-xs text-amber-500/70 font-medium -mt-3 mb-2">Chỉ nhập điểm cho kỹ năng có yêu cầu, bỏ trống nếu không có.</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center shadow-inner">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">List.</label>
+                        <input type="text" id="grade-l" class="w-full px-2 py-1.5 rounded-lg border-none bg-slate-800 text-sm text-center font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center shadow-inner">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Speak.</label>
+                        <input type="text" id="grade-s" class="w-full px-2 py-1.5 rounded-lg border-none bg-slate-800 text-sm text-center font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center shadow-inner">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Read.</label>
+                        <input type="text" id="grade-r" class="w-full px-2 py-1.5 rounded-lg border-none bg-slate-800 text-sm text-center font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center shadow-inner">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Writ.</label>
+                        <input type="text" id="grade-w" class="w-full px-2 py-1.5 rounded-lg border-none bg-slate-800 text-sm text-center font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 text-center shadow-inner">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Vocab.</label>
+                        <input type="text" id="grade-v" class="w-full px-2 py-1.5 rounded-lg border-none bg-slate-800 text-sm text-center font-bold text-amber-500 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Nhận xét chi tiết</label>
+                    <textarea id="grade-feedback" rows="4" class="w-full px-4 py-3 rounded-xl text-sm font-medium resize-none shadow-inner"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 text-slate-950 py-3.5 rounded-xl font-bold hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transform hover:-translate-y-0.5 transition-all text-base mt-2">Hoàn tất lưu điểm</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Modal: Xem bài viết Peer -->
+    <div id="modal-view-peer" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-2xl overflow-hidden max-h-[85vh] flex flex-col">
+        <div class="px-6 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50 flex-shrink-0">
+            <div>
+                <h3 class="font-black text-slate-100 text-lg">Tham khảo bài viết</h3>
+                <p class="text-sm font-bold text-amber-500 mt-0.5">Tác giả: <span id="vp-name"></span></p>
+            </div>
+            <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 border border-slate-700 w-8 h-8 rounded-full shadow-sm flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-slate-900">
+            <div id="vp-content" class="text-slate-300 text-[15px] font-medium leading-relaxed whitespace-pre-wrap ql-editor px-0"></div>
+        </div>
+    </div>
+
+    <!-- 5. Modal: Thêm từ vựng -->
+    <div id="modal-add-vocab" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-amber-900/50 flex justify-between items-center bg-amber-900/20">
+            <h3 class="font-black text-amber-500 text-lg flex items-center"><i class="fa-solid fa-spell-check mr-2"></i> Thêm từ mới</h3>
+            <button class="btn-close-modal text-amber-500 hover:text-amber-400 bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-add-vocab" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-1.5">Từ vựng (Tiếng Anh)</label>
+                <input type="text" id="vocab-en" required class="w-full px-4 py-2.5 text-base font-bold" placeholder="VD: Environment">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-1.5">Nghĩa tiếng Việt</label>
+                <input type="text" id="vocab-vi" required class="w-full px-4 py-2.5 text-sm font-medium" placeholder="VD: Môi trường">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-1.5">Câu ví dụ (Không bắt buộc)</label>
+                <textarea id="vocab-ex" rows="2" class="w-full px-4 py-2.5 text-sm resize-none" placeholder="VD: We need to protect the environment."></textarea>
+            </div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl mt-4 shadow-[0_0_15px_rgba(245,158,11,0.3)]">Lưu vào Kho từ</button>
+        </form>
+    </div>
+
+    <!-- 6. Modal: Luyện Flashcard -->
+    <div id="modal-flashcard" class="modal hidden fixed inset-0 z-[70] flex flex-col items-center justify-center p-4">
+        <button class="btn-close-modal absolute top-6 right-6 text-white/50 hover:text-amber-500 text-4xl font-light z-10">&times;</button>
+        
+        <div class="text-center mb-6 z-10">
+            <h2 class="text-2xl font-black text-white drop-shadow-md">Ôn tập Flashcard</h2>
+            <p class="text-amber-400 font-medium text-sm mt-1" id="fc-counter">Thẻ 1 / 10</p>
+        </div>
+
+        <div class="relative w-full max-w-sm h-72 perspective-1000 cursor-pointer z-10" id="btn-fc-flip">
+            <div id="fc-inner" class="flashcard-inner w-full h-full relative transform-style-3d shadow-[0_0_40px_rgba(0,0,0,0.5)] rounded-3xl">
+                <!-- Mặt trước -->
+                <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl backface-hidden flex flex-col items-center justify-center p-6 border-4 border-amber-500">
+                    <span class="text-xs font-bold text-amber-500 uppercase tracking-widest absolute top-6">Tiếng Anh</span>
+                    <h3 id="fc-en" class="text-4xl font-black text-slate-100 text-center break-words w-full">Word</h3>
+                    <p class="text-xs text-slate-500 absolute bottom-6"><i class="fa-solid fa-hand-pointer mr-1"></i> Chạm để lật thẻ</p>
+                </div>
+                <!-- Mặt sau -->
+                <div class="absolute inset-0 w-full h-full bg-slate-900 rounded-3xl backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 border-4 border-slate-700">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest absolute top-6">Tiếng Việt</span>
+                    <h3 id="fc-vi" class="text-3xl font-bold text-amber-400 text-center break-words w-full mb-4">Nghĩa</h3>
+                    <p id="fc-ex" class="text-sm font-medium text-slate-300 italic text-center px-4 hidden"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 mt-10 z-10">
+            <button id="btn-fc-prev" class="w-14 h-14 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-full flex items-center justify-center text-xl transition-all shadow-lg"><i class="fa-solid fa-chevron-left"></i></button>
+            <button id="btn-fc-next" class="w-14 h-14 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-full flex items-center justify-center text-xl transition-all shadow-lg"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <!-- 7. Modal: Quiz Trắc nghiệm -->
+    <div id="modal-quiz" class="modal hidden fixed inset-0 z-[70] bg-slate-950 flex flex-col">
+        <div class="h-16 bg-slate-900 border-b border-slate-800 flex justify-between items-center px-4 sm:px-8 shadow-sm">
+            <h3 class="font-black text-amber-500 text-lg"><i class="fa-solid fa-gamepad mr-2"></i> Trắc nghiệm Từ vựng</h3>
+            <button class="btn-close-modal font-bold text-slate-400 hover:text-red-400 bg-slate-800 border border-slate-700 px-4 py-1.5 rounded-lg text-sm transition-colors">Thoát Quiz</button>
+        </div>
+        
+        <div class="flex-1 flex flex-col items-center justify-center p-4">
+            <div id="quiz-container" class="w-full max-w-lg bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
+                <div class="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
+                    <span id="quiz-progress-text">Câu 1 / 10</span>
+                    <span>Điểm: <span id="quiz-score" class="text-amber-500 text-lg">0</span></span>
+                </div>
+                <div class="text-center mb-8">
+                    <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">Chọn nghĩa đúng nhất cho từ:</p>
+                    <h2 id="quiz-question" class="text-4xl font-black text-slate-100">Word</h2>
+                </div>
+                <div id="quiz-options" class="grid grid-cols-1 gap-3">
+                    <!-- JS Sinh ra 4 nút button -->
+                </div>
+            </div>
+
+            <!-- Kết quả Quiz -->
+            <div id="quiz-result" class="hidden w-full max-w-md bg-slate-800 p-10 rounded-3xl shadow-2xl border border-slate-700 text-center">
+                <div class="w-24 h-24 bg-amber-900/30 text-amber-500 border border-amber-500/50 rounded-full flex items-center justify-center mx-auto text-5xl mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-3xl font-black text-slate-100 mb-2">Hoàn thành!</h2>
+                <p class="text-slate-400 font-medium mb-6 text-lg">Điểm số của bạn: <strong id="quiz-final-score" class="text-amber-500 text-2xl drop-shadow-md">0</strong></p>
+                <button class="btn-close-modal bg-amber-500 text-slate-950 w-full py-3.5 rounded-xl font-bold hover:bg-amber-400 transition-colors text-lg shadow-[0_0_15px_rgba(245,158,11,0.3)]">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC ỨNG DỤNG (ĐÃ GỘP APP.JS VÀO ĐÂY ĐỂ TRÁNH LỖI CORS FILE:///) -->
+    <script type="module">
+        // 1. THƯ VIỆN & CẤU HÌNH
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // Đã sửa lại định dạng URL hợp lệ để tránh sập app lúc load đầu tiên. Bạn vẫn phải thay Key của bạn vào nhé.
+        const supabaseUrl = 'https://skcvsdtbklyiozjtkizv.supabase.co'; 
+        const supabaseKey = 'sb_publishable_R5np-ctCeEkUEPePj6YOkA_0QE9yRYy';
+        let supabase;
+        try { supabase = createClient(supabaseUrl, supabaseKey); } catch(e) { console.warn("Supabase chưa config đúng:", e); }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoT2R6qXCduyLKqWxwxtjKnqjFTeAxTbg",
+            authDomain: "hotrohoctienganh.firebaseapp.com",
+            databaseURL: "https://hotrohoctienganh-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hotrohoctienganh",
+            storageBucket: "hotrohoctienganh.firebasestorage.app",
+            messagingSenderId: "369983849734",
+            appId: "1:369983849734:web:5a43c168f05aa6137b4a87"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 2. BIẾN TOÀN CỤC & SEED DATA 
+        let currentUser = null, userData = null, currentWeek = null, isInitializingDB = false, quillEditor = null, unsubscribers = [], teacherChartInstance = null, studentChartInstance = null;
+
+        const USERS_SEED = [
+    { username: 'admin.hamy', pass: 'HaMy@2025', name: 'Nguyễn Hà My', role: 'admin', class: null },
+    { username: 'gv.hangnga', pass: 'HangNga@2025', name: 'Hoàng Thị Hằng Nga', role: 'teacher', class: null },
+    { username: 'gv.honghong', pass: 'Hong@2025', name: 'Đinh Thị Hồng', role: 'teacher', class: null },
+    // 10A1
+    ...[
+        'Hà Thị Bình An','Lê Diệu An','Nguyễn Đức Anh','Nguyễn Hà Anh','Tôn Nguyễn Hà Anh',
+        'Hoàng Gia Bảo','Bùi Thùy Chi','Đoàn Mạnh Duy','Nguyễn Thị Thu Duyên','Đinh Khánh Dương',
+        'Trần Tiến Đạt','Lê Đình Đăng','Hoàng Minh Đức','Hoàng Kiều Thái Hà','Lê Thanh Hà',
+        'Cà Trung Hải','Nguyễn Gia Hân','Hà Việt Hùng','Đinh Thế Khải','Hà Duy Khang',
+        'Mai Chí Khang','Phương Đăng Khanh','Trần Nguyễn Quỳnh Lam','Vũ Anh Minh','Hoàng Thanh Ngân',
+        'Khuất Bảo Ngọc','Kiều Bảo Ngọc','Phạm Yến Nhi','Lò Thị Oanh','Nguyễn Gia Phúc',
+        'Nguyễn Huy Phúc','Phạm Nguyễn Hữu Thắng','Tạ Ngọc Trâm','Nguyễn Đức Trung','Nguyễn Công Tùng'
+    ].map((name, i) => {
+        const usernames10a1 = ['binh.an','dieu.an','duc.anh','ha.anh1','ha.anh2','gia.bao','thuy.chi','manh.duy','thu.duyen','khanh.duong','tien.dat','dinh.dang','minh.duc','thai.ha','thanh.ha','trung.hai','gia.han','viet.hung','the.khai','duy.khang','chi.khang','dang.khanh','quynh.lam','anh.minh','thanh.ngan','bao.ngoc1','bao.ngoc2','yen.nhi','thi.oanh','gia.phuc','huy.phuc','huu.thang','ngoc.tram','duc.trung','cong.tung'];
+        return { username: `${usernames10a1[i]}_10a1`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH1' };
+    }),
+    // 10A2
+    ...[
+        'Đỗ Thiên An','Nguyễn Thiên An','Vũ Bảo An','Mai Lâm Anh','Nguyễn Bùi Phương Anh',
+        'Nguyễn Tùng Bách','Phan An Bình','Lò Thị Vân Dung','Đỗ Nguyễn Anh Đức','Bùi Ngọc Hà',
+        'Bùi Hoàng Hiệp','Bùi Huy Hoàng','Nguyễn Gia Huy','Trần Gia Huy','Lưu Nguyễn Minh Huyền',
+        'Đỗ Việt Hưng','Dương Hà Khánh','Đinh Gia Khánh','Hoàng Nam Khánh','Bùi Hà Linh',
+        'Bùi Linh Linh','Nguyễn Thùy Linh','Hoàng Gia Long','Nguyễn Ngọc Mai','Nguyễn Hoàng Minh',
+        'Trần Hoàng Minh','Hoàng Khánh Ngọc','Nguyễn Ánh Ngọc','Hoàng Quỳnh Phương','Nguyễn Minh Quân',
+        'Vương Chí Thành','Phạm Khánh Thy','Nguyễn Bảo Trâm','Nguyễn Huy Vũ','Lường Trúc Vy'
+    ].map((name, i) => {
+        const usernames10a2 = ['thien.an','thien.an2','bao.an','lam.anh','phuong.anh','tung.bach','an.binh','van.dung','anh.duc','ngoc.ha','hoang.hiep','huy.hoang','gia.huy','gia.huy2','minh.huyen','viet.hung','ha.khanh','gia.khanh','nam.khanh','ha.linh','linh.linh','thuy.linh','gia.long','ngoc.mai','hoang.minh','hoang.minh2','khanh.ngoc','anh.ngoc','quynh.phuong','minh.quan','chi.thanh','khanh.thy','bao.tram','huy.vu','truc.vy'];
+        return { username: `${usernames10a2[i]}_10a2`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH2' };
+    })
+];
+
+        // 3. UTILITY FUNCTIONS
+        const $ = (id) => document.getElementById(id);
+
+        function showToast(message, type = 'success') {
+            const container = $('toast-container');
+            const toast = document.createElement('div');
+            // Đổi màu Toast phù hợp Dark mode
+            const colors = type === 'success' ? 'bg-green-600 border-green-500' : type === 'error' ? 'bg-red-600 border-red-500' : 'bg-blue-600 border-blue-500';
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+            
+            toast.className = `${colors} border text-white px-5 py-3 rounded-xl shadow-2xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 font-medium`;
+            toast.innerHTML = `<i class="fa-solid ${icon} mr-3 text-lg"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => toast.classList.remove('translate-x-full', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function showScreen(screenId) {
+            ['init-screen', 'login-screen', 'change-pw-screen', 'app-layout'].forEach(id => $(id).classList.add('hidden'));
+            $(screenId).classList.remove('hidden');
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            $(viewId).classList.remove('hidden');
+            $('sidebar').classList.add('-translate-x-full');
+            $('sidebar-overlay').classList.add('hidden');
+        }
+
+        function initQuill() {
+            if(!quillEditor && $('editor-container')) {
+                quillEditor = new Quill('#editor-container', {
+                    theme: 'snow', placeholder: 'Nhập nội dung bài viết của bạn tại đây...',
+                    modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }]] }
+                });
+            }
+        }
+
+        function clearAllUnsubscribers() { unsubscribers.forEach(unsub => unsub()); unsubscribers = []; }
+
+        // 4. DB INIT
+        async function checkAndInitDatabase() {
+            try {
+                const usersSnap = await getDocs(query(collection(db, "users"), where("role", "==", "admin")));
+                if (!usersSnap.empty) return setupAuthListener();
+
+                isInitializingDB = true; showScreen('init-screen');
+                for (let i = 0; i < USERS_SEED.length; i++) {
+                    const u = USERS_SEED[i]; const email = `${u.username}@amber.edu.vn`;
+                    try {
+                        const userCred = await createUserWithEmailAndPassword(auth, email, u.pass);
+                        await setDoc(doc(db, "users", userCred.user.uid), {
+                            uid: userCred.user.uid, username: u.username, email: email, fullName: u.name,
+                            role: u.role, class: u.class, passwordChanged: false, createdAt: serverTimestamp()
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 4000));
+                        let percent = Math.round(((i + 1) / USERS_SEED.length) * 100);
+                        $('init-progress-bar').style.width = `${percent}%`;
+                        $('init-status-text').innerText = `Đang thiết lập hệ thống (${i + 1}/73 user)`;
+                    } catch (err) { console.error("Lỗi:", u.username); }
+                }
+                await signOut(auth); isInitializingDB = false;
+                showToast("Khởi tạo hệ thống thành công! Vui lòng đăng nhập."); setupAuthListener();
+            } catch (error) { showToast("Lỗi kết nối CSDL", "error"); }
+        }
+
+        // 5. AUTH LOGIC
+        $('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); const btn = $('btn-login'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i>';
+            let username = $('login-username').value.trim(); let email = username.includes('@') ? username : `${username}@amber.edu.vn`;
+            try { await signInWithEmailAndPassword(auth, email, $('login-password').value); } 
+            catch (error) { showToast("Tài khoản hoặc mật khẩu không đúng!", "error"); btn.disabled = false; btn.innerHTML = 'Đăng nhập'; }
+        });
+
+        $('toggle-password').addEventListener('click', () => { const input = $('login-password'); input.type = input.type === 'password' ? 'text' : 'password'; });
+
+        $('change-pw-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); const pw1 = $('new-password').value; const pw2 = $('confirm-password').value;
+            if (pw1 !== pw2) return showToast("Mật khẩu xác nhận không khớp!", "error");
+            try {
+                await updatePassword(auth.currentUser, pw1);
+                await updateDoc(doc(db, "users", currentUser.uid), { passwordChanged: true });
+                userData.passwordChanged = true; showToast("Đổi mật khẩu thành công!"); loadApp();
+            } catch (error) { showToast("Lỗi: " + error.message, "error"); }
+        });
+
+        $('btn-logout').addEventListener('click', () => signOut(auth));
+
+        function setupAuthListener() {
+            onAuthStateChanged(auth, async (user) => {
+                if (isInitializingDB) return; 
+                if (user) {
+                    currentUser = user; const docSnap = await getDoc(doc(db, "users", user.uid));
+                    if (docSnap.exists()) {
+                        userData = docSnap.data();
+                        if (!userData.passwordChanged) showScreen('change-pw-screen'); else loadApp();
+                    } else { await signOut(auth); }
+                } else {
+                    currentUser = null; userData = null; clearAllUnsubscribers(); showScreen('login-screen');
+                    $('btn-login').disabled = false; $('btn-login').innerHTML = 'Đăng nhập';
+                }
+            });
+        }
+
+        // 6. MAIN APP LOGIC
+        async function loadApp() {
+            showScreen('app-layout');
+            $('nav-user-initial').innerText = userData.fullName.charAt(0).toUpperCase();
+            $('nav-user-name').innerText = userData.fullName;
+            $('nav-user-role').innerText = userData.role === 'admin' ? 'Super Admin' : (userData.role === 'teacher' ? 'Giáo viên' : `Học sinh (${userData.class})`);
+            $('header-avatar').innerText = userData.fullName.charAt(0).toUpperCase();
+            
+            const navMenu = $('nav-menu'); navMenu.innerHTML = '';
+            
+            const createNavItem = (id, icon, text, viewId, defaultActive = false) => {
+                const a = document.createElement('a'); a.href = '#'; a.id = id;
+                a.className = `flex items-center px-4 py-3 rounded-xl transition-all font-bold text-[15px] ${defaultActive ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`;
+                a.innerHTML = `<i class="fa-solid ${icon} w-7 text-lg"></i> ${text}`;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('#nav-menu a').forEach(el => el.className = 'flex items-center px-4 py-3 rounded-xl transition-all font-bold text-[15px] text-slate-400 hover:bg-slate-800 hover:text-slate-200');
+                    a.className = 'flex items-center px-4 py-3 rounded-xl transition-all font-bold text-[15px] bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] border-l-4 border-amber-300';
+                    $('header-title').innerText = text; switchView(viewId);
+                };
+                navMenu.appendChild(a); if(defaultActive) setTimeout(() => a.click(), 10);
+            };
+
+            if (userData.role === 'admin' || userData.role === 'teacher') {
+                createNavItem('nav-teacher-dashboard', 'fa-chart-pie', 'Tổng quan', 'view-teacher-dashboard', true);
+                createNavItem('nav-teacher-weeks', 'fa-calendar-week', 'Quản lý Tuần', 'view-teacher-weeks');
+                createNavItem('nav-teacher-materials', 'fa-folder-open', 'Tài liệu học', 'view-teacher-materials');
+                createNavItem('nav-teacher-grading', 'fa-marker', 'Chấm điểm', 'view-teacher-grading');
+                createNavItem('nav-qa', 'fa-comments', 'Hỏi Đáp (Q&A)', 'view-shared-qa');
+            } else {
+                createNavItem('nav-student-dashboard', 'fa-house', 'Trang chủ', 'view-student-dashboard', true);
+                createNavItem('nav-student-submission', 'fa-pen-to-square', 'Nộp bài & Xem bạn bè', 'view-student-submission');
+                createNavItem('nav-student-materials', 'fa-book', 'Tài liệu học', 'view-teacher-materials'); 
+                createNavItem('nav-student-vocab', 'fa-spell-check', 'Từ vựng cá nhân', 'view-student-vocab');
+                createNavItem('nav-qa', 'fa-comments', 'Hỏi Đáp (Q&A)', 'view-shared-qa');
+                
+                $('sd-fullname').innerText = userData.fullName; $('sd-class').innerText = userData.class; initQuill();
+                $('btn-show-upload-material').classList.add('hidden'); $('btn-download-all-materials').parentElement.classList.add('hidden');
+                $('qa-ask-container').classList.remove('hidden');
+            }
+            fetchCurrentWeekAndData();
+        }
+
+        $('btn-open-sidebar').onclick = () => { $('sidebar').classList.remove('-translate-x-full'); $('sidebar-overlay').classList.remove('hidden'); };
+        $('btn-close-sidebar').onclick = $('sidebar-overlay').onclick = () => { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); };
+
+        document.querySelectorAll('.btn-close-modal, .btn-close-drawer, #modal-backdrop').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.modal').forEach(m => { if(m.id === 'modal-grade-student') m.classList.add('translate-x-full'); else m.classList.add('hidden'); });
+                $('modal-backdrop').classList.add('hidden');
+            }
+        });
+
+        // 7. CORE DATA FETCHING
+        function fetchCurrentWeekAndData() {
+            const unsub = onSnapshot(query(collection(db, "weeks"), orderBy("startDate", "desc")), (snapshot) => {
+                let weeks = []; let openWeek = null;
+                snapshot.forEach(doc => { let d = { id: doc.id, ...doc.data() }; weeks.push(d); if (d.status === 'open') openWeek = d; });
+                currentWeek = openWeek || weeks[0]; 
+                
+                if (currentWeek) {
+                    $('header-week-name').innerText = currentWeek.name;
+                    if($('sd-current-week')) $('sd-current-week').innerText = currentWeek.name;
+                    
+                    let optionsHTML = weeks.map(w => `<option value="${w.id}">${w.name} ${w.status==='open'?'(Đang mở)':''}</option>`).join('');
+                    ['filter-material-week', 'filter-grade-week', 'filter-qa-week', 'filter-peer-week', 'um-week'].forEach(id => { if($(id)) { $(id).innerHTML = optionsHTML; $(id).value = currentWeek.id; } });
+                    
+                    startCountdown(currentWeek.endDate);
+                    if(userData.role === 'admin' || userData.role === 'teacher') renderWeeksTable(weeks);
+                    if(unsubscribers.length === 1) setupListeners();
+                }
+            });
+            unsubscribers.push(unsub);
+        }
+
+        function setupListeners() {
+            unsubscribers.push(onSnapshot(collection(db, "submissions"), (snap) => {
+                let allSubs = []; snap.forEach(doc => allSubs.push({id: doc.id, ...doc.data()}));
+                if(userData.role === 'admin' || userData.role === 'teacher') {
+                    renderTeacherDashboard(allSubs); renderGradingTable(allSubs);
+                    $('filter-grade-week').onchange = () => renderGradingTable(allSubs);
+                    $('filter-grade-class').onchange = () => renderGradingTable(allSubs);
+                    $('filter-grade-status').onchange = () => renderGradingTable(allSubs);
+                } else {
+                    renderStudentDashboard(allSubs.filter(s => s.studentId === currentUser.uid));
+                    renderPeerSubmissions(allSubs); $('filter-peer-week').onchange = () => renderPeerSubmissions(allSubs);
+                }
+            }));
+
+            unsubscribers.push(onSnapshot(collection(db, "materials"), (snap) => {
+                let mats = []; let totalSize = 0;
+                snap.forEach(doc => { let d = {id: doc.id, ...doc.data()}; mats.push(d); if(d.fileSize) totalSize += d.fileSize; });
+                if($('storage-used')) $('storage-used').innerText = (totalSize / (1024*1024)).toFixed(2) + " MB";
+                renderMaterials(mats); $('filter-material-week').onchange = () => renderMaterials(mats);
+                if($('filter-material-class')) $('filter-material-class').onchange = () => renderMaterials(mats);
+            }));
+
+            unsubscribers.push(onSnapshot(collection(db, "qa"), (snap) => {
+                let qas = []; let unanswered = 0;
+                snap.forEach(doc => { let d = {id: doc.id, ...doc.data()}; qas.push(d); if(!d.isAnswered) unanswered++; });
+                if($('td-qa-unanswered')) $('td-qa-unanswered').innerText = unanswered;
+                renderQAList(qas); $('filter-qa-week').onchange = () => renderQAList(qas);
+            }));
+
+            if(userData.role === 'student') {
+                unsubscribers.push(onSnapshot(query(collection(db, "vocabulary"), where("studentId", "==", currentUser.uid)), (snap) => {
+                    window.studentVocabs = []; snap.forEach(doc => window.studentVocabs.push({id: doc.id, ...doc.data()}));
+                    renderVocabulary();
+                }));
+            }
+        }
+
+        function startCountdown(endDateStr) {
+            if(window.countdownInterval) clearInterval(window.countdownInterval);
+            const end = new Date(endDateStr + "T21:00:00").getTime();
+            window.countdownInterval = setInterval(() => {
+                const distance = end - new Date().getTime(); window.isWeekLocked = distance < 0;
+                const text = window.isWeekLocked ? "ĐÃ HẾT HẠN" : `${Math.floor(distance / 86400000)}d ${Math.floor((distance % 86400000)/3600000).toString().padStart(2,'0')}:${Math.floor((distance % 3600000)/60000).toString().padStart(2,'0')}:${Math.floor((distance % 60000)/1000).toString().padStart(2,'0')}`;
+                
+                if($('td-countdown')) { $('td-countdown').innerText = text; if(window.isWeekLocked) $('td-countdown').classList.add('text-red-500'); }
+                if($('sd-countdown')) { $('sd-countdown').innerText = text; if(window.isWeekLocked) $('sd-countdown').classList.add('text-red-500'); }
+                
+                if (window.isWeekLocked && $('btn-submit-work')) {
+                    $('btn-submit-work').disabled = true; $('btn-submit-work').className = "w-full bg-slate-700 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl mt-2 text-lg"; $('sub-locked-msg').classList.remove('hidden');
+                } else if(!window.isWeekLocked && $('btn-submit-work')) {
+                    $('btn-submit-work').disabled = false; $('btn-submit-work').className = "w-full bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 mt-2 text-lg"; $('sub-locked-msg').classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        // 8. ADMIN / TEACHER
+        if($('btn-show-create-week')) {
+            $('btn-show-create-week').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-create-week').classList.remove('hidden'); };
+            $('form-create-week').onsubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    await addDoc(collection(db, "weeks"), { name: $('cw-name').value, startDate: $('cw-start').value, endDate: $('cw-end').value, gradingScale: $('cw-scale').value, status: 'open', createdAt: serverTimestamp() });
+                    showToast("Tạo tuần học thành công!"); document.querySelector('#modal-create-week .btn-close-modal').click(); $('form-create-week').reset();
+                } catch (err) { showToast(err.message, "error"); }
+            };
+        }
+
+        function renderWeeksTable(weeks) {
+            $('table-weeks').innerHTML = weeks.map(w => `
+                <tr class="hover:bg-slate-700/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-200">${w.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-400">${w.startDate} - ${w.endDate} 21:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-400">Thang ${w.gradingScale}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 inline-flex text-xs font-bold rounded-full border ${w.status === 'open' ? 'bg-green-900/30 text-green-400 border-green-800' : 'bg-slate-800 text-slate-500 border-slate-700'}">${w.status === 'open' ? 'Đang mở' : 'Đã khóa'}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <button onclick="toggleWeekStatus('${w.id}', '${w.status}')" class="text-amber-500 hover:text-amber-400 font-bold bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg mr-2">${w.status === 'open' ? 'Khóa form' : 'Mở lại'}</button>
+                        ${userData.role === 'admin' ? `<button onclick="deleteWeek('${w.id}')" class="text-red-400 hover:text-red-300 bg-red-900/20 border border-red-900/50 px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        window.toggleWeekStatus = async (id, currentStatus) => { await updateDoc(doc(db, "weeks", id), { status: currentStatus === 'open' ? 'closed' : 'open' }); showToast("Cập nhật thành công!"); };
+        window.deleteWeek = async (id) => { if(confirm("Xóa vĩnh viễn Tuần học này?")) { await deleteDoc(doc(db, "weeks", id)); showToast("Đã xóa tuần!"); } };
+
+        function renderTeacherDashboard(allSubs) {
+            if(!currentWeek) return;
+            const totalStudents = 70; const currentWeekSubs = allSubs.filter(s => s.weekId === currentWeek.id);
+            $('td-total-students').innerText = totalStudents; $('td-submitted').innerText = currentWeekSubs.length; $('td-not-submitted').innerText = totalStudents - currentWeekSubs.length;
+            
+            const submittedUsernames = currentWeekSubs.map(s => s.studentUsername);
+            const missing = USERS_SEED.filter(u => u.role === 'student' && !submittedUsernames.includes(u.username));
+            
+            $('td-missing-list').innerHTML = missing.map(m => `
+                <div class="flex justify-between items-center bg-red-900/10 px-4 py-3 rounded-xl border border-red-900/30">
+                    <span class="font-bold text-slate-300">${m.name}</span>
+                    <span class="text-[10px] font-black text-red-500 bg-red-950 px-2 py-1 rounded uppercase border border-red-900">${m.class}</span>
+                </div>
+            `).join('');
+            
+            if(teacherChartInstance) teacherChartInstance.destroy();
+            let weekScores = {}; 
+            allSubs.forEach(s => {
+                if(s.grades) {
+                    let t = 0, c = 0; ['listening', 'speaking', 'reading', 'writing', 'vocabulary'].forEach(k => { if(s.grades[k]) { t += Number(s.grades[k]); c++; } });
+                    if(c > 0) { if(!weekScores[s.weekId]) weekScores[s.weekId] = []; weekScores[s.weekId].push(t/c); }
+                }
+            });
+            const weekOptions = Array.from($('filter-grade-week').options).reverse();
+            const labels = weekOptions.map(o => o.text.replace(' (Đang mở)',''));
+            const data = weekOptions.map(o => weekScores[o.value] ? weekScores[o.value].reduce((a,b)=>a+b,0)/weekScores[o.value].length : 0);
+            
+            teacherChartInstance = new Chart($('teacher-chart').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Điểm TB', data: data, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } } }, plugins: { legend: { labels: { color: '#f8fafc' } } } } });
+        }
+
+        $('btn-show-upload-material').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-upload-material').classList.remove('hidden'); };
+        $('form-upload-material').onsubmit = async (e) => {
+            e.preventDefault(); const btn = document.querySelector('#form-upload-material button[type="submit"]');
+            const file = $('um-file').files[0]; const link = $('um-link').value;
+            if(!file && !link) return showToast("Vui lòng đính kèm File hoặc Link!", "error");
+            if(!supabaseUrl || supabaseUrl.includes("YOUR_PROJECT_ID")) return showToast("Chưa cấu hình Supabase URL", "error");
+            
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải lên...';
+            const docData = { weekId: $('um-week').value, class: $('um-class').value, title: $('um-title').value, type: $('um-type').value, uploadedBy: userData.fullName, createdAt: serverTimestamp() };
+            
+            try {
+                if(file) {
+                    if(file.size > 50*1024*1024) throw new Error("File > 50MB. Dùng Link!");
+                    $('um-progress-container').classList.remove('hidden');
+                    const filePath = `materials/${Date.now()}_${file.name.replace(/\s+/g, '_')}`; 
+                    const { error } = await supabase.storage.from('materials').upload(filePath, file);
+                    if (error) throw new Error(error.message);
+                    docData.fileUrl = supabase.storage.from('materials').getPublicUrl(filePath).data.publicUrl;
+                    docData.fileName = file.name; docData.fileSize = file.size; docData.fileType = 'upload';
+                    $('um-progress-bar').style.width = '100%'; await addDoc(collection(db, "materials"), docData);
+                } else { docData.fileUrl = link; docData.fileType = 'link'; await addDoc(collection(db, "materials"), docData); }
+                showToast("Thêm tài liệu thành công!"); $('form-upload-material').reset(); document.querySelector('#modal-upload-material .btn-close-modal').click();
+            } catch (err) { showToast("Lỗi: " + err.message, "error"); } 
+            finally { btn.disabled = false; btn.innerHTML = 'Xác nhận đăng tài liệu'; $('um-progress-container').classList.add('hidden'); }
+        };
+
+        function renderMaterials(materials) {
+            const w = $('filter-material-week').value; const c = $('filter-material-class') ? $('filter-material-class').value : 'ALL';
+            let filtered = materials.filter(m => m.weekId === w && (userData.role === 'student' ? (m.class === 'ALL' || m.class === userData.class) : (c === 'ALL' || m.class === c || m.class === 'ALL')));
+            const icons = { listening: 'fa-headphones text-blue-400', speaking: 'fa-microphone text-orange-400', reading: 'fa-book-open text-green-400', writing: 'fa-pen text-purple-400', vocabulary: 'fa-spell-check text-amber-400' };
+            
+            $('grid-materials-teacher').innerHTML = filtered.map(m => `
+                <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 hover:border-amber-500/50 transition-all group relative">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-700 group-hover:bg-amber-900/20 transition-colors"><i class="fa-solid ${icons[m.type]} text-xl"></i></div>
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="font-bold text-slate-100 text-sm truncate" title="${m.title}">${m.title}</h4>
+                            <p class="text-xs text-slate-500 mt-1 font-medium">Lớp: ${m.class === 'ALL' ? 'Chung' : m.class}</p>
+                            <a href="${m.fileUrl}" target="_blank" class="inline-block mt-3 text-[13px] font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg hover:bg-amber-900/40"><i class="fa-solid ${m.fileType==='link' ? 'fa-link' : 'fa-download'} mr-1"></i>${m.fileType==='link' ? 'Mở Link' : 'Tải xuống'}</a>
+                        </div>
+                    </div>
+                    ${userData.role === 'admin' ? `<button onclick="deleteMaterial('${m.id}', '${m.fileType}', '${m.fileUrl}')" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 bg-slate-900 border border-slate-700 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                </div>
+            `).join('') || '<p class="text-slate-500 col-span-full py-10 text-center font-medium">Chưa có tài liệu nào trong tuần này.</p>';
+        }
+
+        window.deleteMaterial = async (id, type, url) => {
+            if(!confirm("Xóa vĩnh viễn tài liệu này?")) return;
+            try {
+                if(type === 'upload' && url.includes('/public/materials/')) await supabase.storage.from('materials').remove([url.split('/public/materials/')[1]]);
+                await deleteDoc(doc(db, "materials", id)); showToast("Đã xóa tài liệu!");
+            } catch(e) { showToast("Lỗi xóa", "error"); }
+        }
+
+        // TÍNH NĂNG RESET PASSWORD CHO ADMIN
+        window.forceResetPassword = async (studentUsername) => {
+            if(!confirm(`Yêu cầu học sinh ${studentUsername} đổi lại mật khẩu ở lần đăng nhập tới?`)) return;
+            try {
+                const snap = await getDocs(query(collection(db, "users"), where("username", "==", studentUsername)));
+                if(snap.empty) return showToast("Không tìm thấy user", "error");
+                await updateDoc(doc(db, "users", snap.docs[0].id), { passwordChanged: false });
+                showToast("Đã đặt yêu cầu Reset thành công!");
+            } catch(e) { showToast(e.message, "error"); }
+        }
+
+        function renderGradingTable(subs) {
+            const w = $('filter-grade-week').value; const c = $('filter-grade-class').value; const st = $('filter-grade-status').value;
+            let filtered = subs.filter(s => s.weekId === w); if(c !== 'ALL') filtered = filtered.filter(s => s.class === c);
+            
+            $('table-grading').innerHTML = filtered.map(s => {
+                let g = s.grades || {}; let isGraded = (g.listening || g.speaking || g.reading || g.writing || g.vocabulary || s.feedback);
+                if(st === 'UNGRADED' && isGraded) return ''; if(st === 'GRADED' && !isGraded) return '';
+                
+                return `
+                    <tr class="hover:bg-slate-700/50">
+                        <td class="px-6 py-4 font-bold text-slate-200">${s.studentName}</td>
+                        <td class="px-6 py-4 text-slate-500 text-xs font-black uppercase">${s.class}</td>
+                        <td class="px-4 py-4 text-center font-bold text-slate-300">${g.listening || '-'}</td>
+                        <td class="px-4 py-4 text-center font-bold text-slate-300">${g.speaking || '-'}</td>
+                        <td class="px-4 py-4 text-center font-bold text-slate-300">${g.reading || '-'}</td>
+                        <td class="px-4 py-4 text-center font-bold text-slate-300">${g.writing || '-'}</td>
+                        <td class="px-4 py-4 text-center font-bold text-amber-500">${g.vocabulary || '-'}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-3 py-1 text-[11px] font-black rounded-full border ${isGraded ? 'bg-green-900/30 text-green-400 border-green-800' : 'bg-red-900/30 text-red-400 border-red-800'}">${isGraded ? 'Đã chấm' : 'Chưa chấm'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="openGradingDrawer('${s.id}')" class="bg-amber-500 text-slate-950 px-4 py-2 rounded-lg hover:bg-amber-400 font-bold text-xs transition-colors shadow-[0_0_10px_rgba(245,158,11,0.3)]">Chấm bài</button>
+                            ${userData.role === 'admin' ? `
+                                <button onclick="forceResetPassword('${s.studentUsername}')" title="Ép Reset Mật khẩu" class="text-blue-400 hover:text-blue-300 ml-2 bg-slate-800 p-2 rounded-lg border border-slate-700"><i class="fa-solid fa-key"></i></button>
+                                <button onclick="deleteSubmission('${s.id}')" title="Xóa bài" class="text-red-400 hover:text-red-300 ml-1 bg-slate-800 p-2 rounded-lg border border-slate-700"><i class="fa-solid fa-trash"></i></button>
+                            `:''}
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="9" class="text-center py-10 text-slate-500 font-medium">Không có bài nộp nào.</td></tr>';
+        }
+
+        window.deleteSubmission = async (id) => { if(confirm("Xóa vĩnh viễn bài nộp này?")) { await deleteDoc(doc(db, "submissions", id)); showToast("Đã xóa bài!"); } };
+        window.openGradingDrawer = async (subId) => {
+            const docSnap = await getDoc(doc(db, "submissions", subId)); const sub = docSnap.data(); sub.id = docSnap.id;
+            $('gs-student-name').innerText = sub.studentName; $('gs-week-info').innerText = `THANG ĐIỂM: ${sub.gradeScale || '10'}`;
+            $('gs-content-text').innerHTML = sub.textContent || '<i class="text-slate-500 font-normal">Không có bài viết text</i>';
+            $('gs-attachments').innerHTML = sub.files ? sub.files.map((f, i) => `
+                <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm shadow-inner group">
+                    <a href="${f.url}" target="_blank" class="text-blue-400 hover:underline truncate w-4/5 font-bold"><i class="fa-solid ${f.type==='link' ? 'fa-link' : 'fa-file'} mr-2 text-slate-500"></i>${f.name || 'Link bài tập'}</a>
+                    ${userData.role === 'admin' && f.type === 'upload' ? `<button onclick="deleteStudentFile('${sub.id}', ${i}, '${f.url}')" class="text-red-400 hover:text-red-300 bg-slate-800 w-7 h-7 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-slate-600"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                </div>
+            `).join('') : '<span class="text-sm font-medium text-slate-500">Không đính kèm file</span>';
+            
+            let g = sub.grades || {}; $('grade-l').value = g.listening||''; $('grade-s').value = g.speaking||''; $('grade-r').value = g.reading||''; $('grade-w').value = g.writing||''; $('grade-v').value = g.vocabulary||''; $('grade-feedback').value = sub.feedback||'';
+            $('form-grade').onsubmit = async (e) => {
+                e.preventDefault(); await updateDoc(doc(db, "submissions", sub.id), { grades: { listening: $('grade-l').value, speaking: $('grade-s').value, reading: $('grade-r').value, writing: $('grade-w').value, vocabulary: $('grade-v').value }, feedback: $('grade-feedback').value, gradedBy: userData.fullName, gradedAt: serverTimestamp() });
+                showToast("Lưu điểm thành công!"); document.querySelector('.btn-close-drawer').click();
+            };
+            $('modal-backdrop').classList.remove('hidden'); $('modal-grade-student').classList.remove('hidden'); setTimeout(() => { $('modal-grade-student').classList.remove('translate-x-full'); }, 10);
+        };
+
+        window.deleteStudentFile = async (subId, fileIndex, url) => {
+            if(!confirm("Xóa file này để giải phóng bộ nhớ?")) return;
+            try {
+                if(url.includes('/public/materials/')) await supabase.storage.from('materials').remove([url.split('/public/materials/')[1]]);
+                const docSnap = await getDoc(doc(db, "submissions", subId)); let files = docSnap.data().files || []; files.splice(fileIndex, 1);
+                await updateDoc(doc(db, "submissions", subId), { files: files }); showToast("Đã xóa file!"); openGradingDrawer(subId);
+            } catch(err) { showToast("Lỗi: " + err.message, "error"); }
+        }
+
+        // 9. STUDENT LOGIC
+        function renderStudentDashboard(mySubs) {
+            if(!currentWeek) return;
+            let currentSub = mySubs.find(s => s.weekId === currentWeek.id); const icon = $('sd-status-icon');
+            if(currentSub) {
+                $('sd-status-text').innerText = "Đã nộp bài"; icon.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 bg-green-900/30 text-green-400 border border-green-800/50 shadow-inner"; icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                $('btn-submit-work').innerText = "Cập nhật bài nộp (Ghi đè)"; if(quillEditor && currentSub.textContent) quillEditor.root.innerHTML = currentSub.textContent;
+                let g = currentSub.grades || {};
+                if(g.listening || g.speaking || g.reading || g.writing || g.vocabulary || currentSub.feedback) {
+                    $('sub-grades-container').innerHTML = `
+                        <div class="grid grid-cols-5 gap-2 sm:gap-4 w-full mb-6">
+                            <div class="bg-blue-900/20 border border-blue-900 p-3 rounded-2xl flex flex-col items-center"><span class="text-[10px] font-black uppercase text-blue-500 mb-1">List.</span><span class="text-xl font-black text-blue-400">${g.listening||'-'}</span></div>
+                            <div class="bg-orange-900/20 border border-orange-900 p-3 rounded-2xl flex flex-col items-center"><span class="text-[10px] font-black uppercase text-orange-500 mb-1">Speak.</span><span class="text-xl font-black text-orange-400">${g.speaking||'-'}</span></div>
+                            <div class="bg-green-900/20 border border-green-900 p-3 rounded-2xl flex flex-col items-center"><span class="text-[10px] font-black uppercase text-green-500 mb-1">Read.</span><span class="text-xl font-black text-green-400">${g.reading||'-'}</span></div>
+                            <div class="bg-purple-900/20 border border-purple-900 p-3 rounded-2xl flex flex-col items-center"><span class="text-[10px] font-black uppercase text-purple-500 mb-1">Writ.</span><span class="text-xl font-black text-purple-400">${g.writing||'-'}</span></div>
+                            <div class="bg-amber-900/20 border border-amber-900 p-3 rounded-2xl flex flex-col items-center"><span class="text-[10px] font-black uppercase text-amber-500 mb-1">Vocab.</span><span class="text-xl font-black text-amber-400">${g.vocabulary||'-'}</span></div>
+                        </div>
+                        <div class="w-full bg-slate-900 p-5 rounded-2xl border border-slate-700 text-left">
+                            <h4 class="font-bold text-slate-300 mb-2 flex items-center"><i class="fa-solid fa-comment-dots text-amber-500 mr-2"></i> Nhận xét từ Giáo viên</h4>
+                            <p class="text-sm text-slate-400 font-medium leading-relaxed whitespace-pre-wrap">${currentSub.feedback || 'Chưa có nhận xét.'}</p>
+                        </div>
+                    `;
+                    $('sub-grades-container').classList.remove('items-center', 'justify-center', 'text-center');
+                }
+            } else {
+                $('sd-status-text').innerText = "Chưa nộp bài"; icon.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 bg-red-900/30 text-red-400 border border-red-800/50 shadow-inner"; icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                $('btn-submit-work').innerText = "Nộp bài"; if(quillEditor) quillEditor.root.innerHTML = '';
+                $('sub-grades-container').innerHTML = `<div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner border border-slate-700"><i class="fa-solid fa-hourglass-half text-amber-500/50"></i></div><p class="font-medium text-sm">Chưa có bài nộp.</p>`;
+                $('sub-grades-container').classList.add('items-center', 'justify-center', 'text-center');
+            }
+            if(studentChartInstance) studentChartInstance.destroy();
+            const labels = mySubs.map((_, i) => `Tuần ${i+1}`); const getData = (s) => mySubs.map(x => x.grades && x.grades[s] ? Number(x.grades[s]) : null);
+            studentChartInstance = new Chart($('student-progress-chart').getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'Nghe', data: getData('listening'), borderColor: '#60a5fa' }, { label: 'Từ vựng', data: getData('vocabulary'), borderColor: '#fbbf24' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } } }, plugins: { legend: { labels: { color: '#f8fafc' } } } } });
+        }
+
+        $('submission-form').onsubmit = async (e) => {
+            e.preventDefault(); if(window.isWeekLocked) return showToast("Đã quá hạn!", "error");
+            if(!supabaseUrl || supabaseUrl.includes("YOUR_PROJECT_ID")) return showToast("Chưa cấu hình Supabase URL", "error");
+            const file = $('sub-file-input').files[0]; const link = $('sub-link-input').value;
+            let content = quillEditor ? quillEditor.root.innerHTML : ''; if(content === '<p><br></p>') content = ''; 
+            if(!file && !link && !content) return showToast("Vui lòng viết bài hoặc đính kèm file!", "error");
+            
+            const btn = $('btn-submit-work'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang lưu bài...';
+            try {
+                const snap = await getDocs(query(collection(db, "submissions"), where("studentId", "==", currentUser.uid)));
+                const existDoc = snap.docs.find(d => d.data().weekId === currentWeek.id);
+                let subData = { weekId: currentWeek.id, studentId: currentUser.uid, studentUsername: userData.username, studentName: userData.fullName, class: userData.class, textContent: content, submittedAt: serverTimestamp(), gradeScale: currentWeek.gradingScale };
+                let filesArr = existDoc ? (existDoc.data().files || []) : []; if(link) filesArr.push({ name: 'Link bài tập', url: link, type: 'link' });
+                if(file) {
+                    if(file.size > 50*1024*1024) throw new Error("File > 50MB!");
+                    $('sub-upload-progress-container').classList.remove('hidden');
+                    const filePath = `submissions/${currentUser.uid}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                    const { error } = await supabase.storage.from('materials').upload(filePath, file);
+                    if (error) throw new Error(error.message);
+                    filesArr.push({ name: file.name, url: supabase.storage.from('materials').getPublicUrl(filePath).data.publicUrl, type: 'upload' });
+                    $('sub-upload-bar').style.width = '100%'; $('sub-upload-percent').innerText = '100%';
+                }
+                subData.files = filesArr;
+                if(!existDoc) await addDoc(collection(db, "submissions"), subData); else await updateDoc(doc(db, "submissions", existDoc.id), subData);
+                showToast("Nộp bài thành công!"); $('sub-file-input').value = ''; $('sub-link-input').value = '';
+            } catch(err) { showToast("Lỗi: " + err.message, "error"); } 
+            finally { btn.disabled = false; btn.innerHTML = 'Nộp bài & Lưu thay đổi'; $('sub-upload-progress-container').classList.add('hidden'); }
+        };
+
+        function renderPeerSubmissions(allSubs) {
+            if(!$('table-peer-submissions')) return;
+            $('table-peer-submissions').innerHTML = allSubs.filter(s => s.weekId === $('filter-peer-week').value).map(s => {
+                let g = s.grades || {};
+                return `
+                    <tr class="hover:bg-slate-700/50 transition-colors">
+                        <td class="px-4 py-3 font-bold text-slate-200">${s.studentName}</td>
+                        <td class="px-4 py-3 text-slate-500 text-[10px] font-black uppercase">${s.class}</td>
+                        <td class="px-2 py-3 text-center text-xs font-black text-blue-400">${g.listening || '-'}</td>
+                        <td class="px-2 py-3 text-center text-xs font-black text-orange-400">${g.speaking || '-'}</td>
+                        <td class="px-2 py-3 text-center text-xs font-black text-green-400">${g.reading || '-'}</td>
+                        <td class="px-2 py-3 text-center text-xs font-black text-purple-400">${g.writing || '-'}</td>
+                        <td class="px-2 py-3 text-center text-xs font-black text-amber-500">${g.vocabulary || '-'}</td>
+                        <td class="px-4 py-3 text-right">
+                            ${s.textContent ? `<button onclick="viewPeerText('${s.id}')" class="text-amber-500 hover:text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg font-bold text-[11px] transition-colors"><i class="fa-solid fa-eye mr-1"></i> Đọc bài</button>` : '<span class="text-[11px] font-bold text-slate-600">Không có Text</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="8" class="text-center py-6 text-slate-500 font-medium">Chưa có bài nộp.</td></tr>';
+            window.allPeerSubs = allSubs;
+        }
+
+        window.viewPeerText = (id) => {
+            const s = window.allPeerSubs.find(x => x.id === id); if(!s) return;
+            $('vp-name').innerText = s.studentName; $('vp-content').innerHTML = s.textContent;
+            $('modal-backdrop').classList.remove('hidden'); $('modal-view-peer').classList.remove('hidden');
+        };
+
+        // 10. VOCAB & Q&A (Rút gọn hiển thị cơ bản)
+        $('btn-show-add-vocab').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-add-vocab').classList.remove('hidden'); };
+        $('form-add-vocab').onsubmit = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "vocabulary"), { studentId: currentUser.uid, en: $('vocab-en').value, vi: $('vocab-vi').value, ex: $('vocab-ex').value, createdAt: serverTimestamp() }); showToast("Đã lưu từ vựng!"); $('form-add-vocab').reset(); document.querySelector('#modal-add-vocab .btn-close-modal').click(); } catch(e) { showToast(e.message, "error"); } };
+        function renderVocabulary() {
+            $('grid-vocabulary').innerHTML = (window.studentVocabs || []).map(v => `
+                <div class="bg-slate-900 p-5 rounded-2xl shadow-inner border border-slate-700 hover:border-amber-500 transition-colors group relative">
+                    <h3 class="text-xl font-black text-slate-100 mb-1">${v.en}</h3>
+                    <p class="text-sm font-bold text-amber-500 mb-2">${v.vi}</p>
+                    ${v.ex ? `<p class="text-xs text-slate-400 italic bg-slate-950 border border-slate-800 p-2 rounded-lg">"${v.ex}"</p>` : ''}
+                    <button onclick="deleteVocab('${v.id}')" class="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('') || `<div class="col-span-full text-center py-20 text-slate-500 flex flex-col items-center"><i class="fa-solid fa-box-open text-5xl mb-4 opacity-30"></i><p class="font-medium text-lg text-slate-400">Kho từ vựng trống.</p></div>`;
+        }
+        window.deleteVocab = async (id) => { if(confirm("Xóa từ này?")) await deleteDoc(doc(db, "vocabulary", id)); };
+
+        if($('btn-submit-qa')) {
+            $('btn-submit-qa').onclick = async () => {
+                const text = $('qa-input-text').value; if(!text) return;
+                await addDoc(collection(db, "qa"), { weekId: $('filter-qa-week').value, studentId: currentUser.uid, studentName: userData.fullName, class: userData.class, question: text, isAnswered: false, createdAt: serverTimestamp() });
+                $('qa-input-text').value = ''; showToast("Gửi câu hỏi thành công!");
+            };
+        }
+
+        function renderQAList(qas) {
+            $('qa-thread-list').innerHTML = qas.filter(q => q.weekId === $('filter-qa-week').value).sort((a,b) => (a.isAnswered === b.isAnswered) ? 0 : a.isAnswered ? 1 : -1).map(q => `
+                <div class="bg-slate-800 p-5 rounded-2xl border ${q.isAnswered ? 'border-slate-700' : 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]'} shadow-sm relative group">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-300 mr-3 border border-slate-600">${q.studentName.charAt(0)}</div>
+                            <div><span class="font-bold text-slate-200">${q.studentName}</span><span class="text-[10px] font-black text-slate-400 bg-slate-900 px-2 py-0.5 rounded ml-2 uppercase border border-slate-700">${q.class}</span></div>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 font-medium whitespace-pre-wrap pl-11">${q.question}</p>
+                    ${q.isAnswered ? `
+                        <div class="mt-4 ml-11 pl-4 border-l-4 border-green-500 bg-green-900/10 py-3 pr-4 rounded-r-xl">
+                            <span class="text-[11px] font-black text-green-400 mb-1 block uppercase tracking-wider"><i class="fa-solid fa-chalkboard-user mr-1"></i> ${q.answeredBy} trả lời:</span>
+                            <p class="text-sm font-medium text-slate-200 leading-relaxed">${q.answer}</p>
+                        </div>
+                    ` : (userData.role === 'admin' || userData.role === 'teacher' ? `
+                        <div class="mt-4 ml-11 flex gap-2">
+                            <input type="text" id="ans-${q.id}" class="flex-1 border border-slate-600 bg-slate-900 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none text-slate-200" placeholder="Nhập câu trả lời...">
+                            <button onclick="answerQA('${q.id}')" class="bg-amber-500 text-slate-950 px-5 py-2 rounded-xl text-sm font-bold hover:bg-amber-400">Gửi</button>
+                        </div>
+                    ` : '')}
+                    ${userData.role === 'admin' ? `<button onclick="deleteQA('${q.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>` : ''}
+                </div>
+            `).join('') || '<div class="text-center py-10 text-slate-500 font-medium">Chưa có câu hỏi nào trong tuần này.</div>';
+        }
+        window.answerQA = async (id) => { const text = $(`ans-${id}`).value; if(!text) return; await updateDoc(doc(db, "qa", id), { answer: text, answeredBy: userData.fullName, isAnswered: true, answeredAt: serverTimestamp() }); };
+        window.deleteQA = async (id) => { if(confirm("Xóa câu hỏi này?")) await deleteDoc(doc(db, "qa", id)); };
+
+        // INIT
+        window.onload = async () => { await checkAndInitDatabase(); };
+    </script>
+</body>
+</html>
