@@ -99,7 +99,6 @@
         }
     </style>
 </head>
-<!-- Kích hoạt Dark Mode từ body -->
 <body class="bg-slate-950 text-slate-200 font-sans antialiased overflow-hidden h-screen flex flex-col transition-colors duration-200">
     
     <!-- ================= TOAST NOTIFICATION ================= -->
@@ -124,7 +123,6 @@
 
     <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
     <div id="login-screen" class="hidden fixed inset-0 bg-slate-950 z-[60] flex items-center justify-center p-4 relative overflow-hidden">
-        <!-- Abstract Background -->
         <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-amber-600/20 rounded-full blur-[100px]"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-orange-600/20 rounded-full blur-[100px]"></div>
 
@@ -380,6 +378,40 @@
                     </div>
                 </div>
 
+                <!-- View: Teacher Từ vựng (QUẢN LÝ TỪ VỰNG HỌC SINH) -->
+                <div id="view-teacher-vocab" class="view-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Quản lý Từ vựng Học sinh</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Kiểm tra, sửa hoặc xóa từ vựng do học sinh nhập.</p>
+                        </div>
+                        <select id="filter-teacher-vocab-class" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-200 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none w-full sm:w-auto">
+                            <option value="ALL">Cả 2 lớp</option>
+                            <option value="10ANH1">10 Anh 1</option>
+                            <option value="10ANH2">10 Anh 2</option>
+                        </select>
+                    </div>
+                    <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-700">
+                                <thead class="bg-slate-900/80">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Học sinh</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Lớp</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Từ vựng (EN)</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Nghĩa (VI)</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Ví dụ</th>
+                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-slate-800 divide-y divide-slate-700 text-sm font-medium" id="table-teacher-vocab">
+                                    <!-- JS render -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- View: Chấm điểm -->
                 <div id="view-teacher-grading" class="view-section hidden space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -484,9 +516,14 @@
 
                 <!-- View: Student Nộp bài & Xem điểm -->
                 <div id="view-student-submission" class="view-section hidden space-y-6">
-                    <div>
-                        <h2 class="text-3xl font-black text-slate-100 tracking-tight">Nộp bài & Xem điểm</h2>
-                        <p class="text-slate-400 mt-1 font-medium">Gửi bài viết, file đính kèm và xem đánh giá từ giáo viên.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Nộp bài & Xem điểm</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Gửi bài viết, file đính kèm và xem đánh giá từ giáo viên.</p>
+                        </div>
+                        <button id="btn-show-student-tasks" class="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] transform hover:-translate-y-0.5 px-5 py-2.5 rounded-xl font-bold transition-all duration-200 whitespace-nowrap animate-pulse">
+                            <i class="fa-solid fa-list-check mr-2"></i> Xem nhiệm vụ tuần này
+                        </button>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -608,9 +645,8 @@
                     </div>
                     
                     <div class="bg-slate-800 rounded-3xl shadow-lg border border-slate-700 p-6 sm:p-8 min-h-[400px]">
-                        <!-- Grid chứa danh sách từ vựng -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5" id="grid-vocabulary">
-                            <!-- Sẽ được điền bằng JS -->
+                            <!-- JS render -->
                         </div>
                     </div>
                 </div>
@@ -632,9 +668,6 @@
                         </h3>
                         <textarea id="qa-input-text" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm font-medium text-slate-200 focus:ring-2 focus:ring-amber-500 mb-3 shadow-inner resize-none outline-none placeholder-slate-600" placeholder="Bạn chưa hiểu phần nào? Gõ câu hỏi vào đây nhé..."></textarea>
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div class="relative w-full sm:w-auto hidden">
-                                <!-- Chỗ này có thể mở rộng upload ảnh sau -->
-                            </div>
                             <button id="btn-submit-qa" class="bg-amber-500 text-slate-950 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transform hover:-translate-y-0.5 transition-all w-full sm:w-auto whitespace-nowrap ml-auto">Gửi câu hỏi</button>
                         </div>
                     </div>
@@ -651,7 +684,6 @@
 
     <!-- ================= MODALS (POPUP & DRAWERS) ================= -->
 
-    <!-- Backdrop -->
     <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-950/80 z-[60] backdrop-blur-sm transition-opacity duration-300"></div>
 
     <!-- 1. Modal: Tạo Tuần (Giáo viên) -->
@@ -767,21 +799,16 @@
         </div>
         
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <!-- Text Content -->
             <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
                 <h4 class="font-bold text-slate-300 text-sm mb-3 flex items-center"><i class="fa-solid fa-align-left text-slate-500 mr-2"></i> Bài viết trực tiếp (Text)</h4>
                 <div id="gs-content-text" class="bg-slate-900 p-4 rounded-xl text-sm whitespace-pre-wrap text-slate-300 border border-slate-700 min-h-[120px] font-medium leading-relaxed"></div>
             </div>
 
-            <!-- File Attachments -->
             <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
                 <h4 class="font-bold text-slate-300 text-sm mb-3 flex items-center"><i class="fa-solid fa-paperclip text-slate-500 mr-2"></i> File / Link đính kèm</h4>
-                <div id="gs-attachments" class="space-y-2">
-                    <!-- JS render -->
-                </div>
+                <div id="gs-attachments" class="space-y-2"></div>
             </div>
             
-            <!-- Grading Form -->
             <form id="form-grade" class="bg-amber-900/10 p-6 rounded-2xl border border-amber-900/50 shadow-sm space-y-5">
                 <h4 class="font-black text-amber-500 flex items-center"><i class="fa-solid fa-marker mr-2"></i> Bảng điểm & Nhận xét</h4>
                 <p class="text-xs text-amber-500/70 font-medium -mt-3 mb-2">Chỉ nhập điểm cho kỹ năng có yêu cầu, bỏ trống nếu không có.</p>
@@ -831,13 +858,14 @@
         </div>
     </div>
 
-    <!-- 5. Modal: Thêm từ vựng -->
+    <!-- 5. Modal: Thêm / Sửa từ vựng -->
     <div id="modal-add-vocab" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-amber-900/50 flex justify-between items-center bg-amber-900/20">
-            <h3 class="font-black text-amber-500 text-lg flex items-center"><i class="fa-solid fa-spell-check mr-2"></i> Thêm từ mới</h3>
+            <h3 id="vocab-modal-title" class="font-black text-amber-500 text-lg flex items-center"><i class="fa-solid fa-spell-check mr-2"></i> Thêm từ mới</h3>
             <button class="btn-close-modal text-amber-500 hover:text-amber-400 bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form id="form-add-vocab" class="p-6 space-y-4">
+            <input type="hidden" id="vocab-id-edit" value="">
             <div>
                 <label class="block text-sm font-bold text-slate-300 mb-1.5">Từ vựng (Tiếng Anh)</label>
                 <input type="text" id="vocab-en" required class="w-full px-4 py-2.5 text-base font-bold" placeholder="VD: Environment">
@@ -850,7 +878,7 @@
                 <label class="block text-sm font-bold text-slate-300 mb-1.5">Câu ví dụ (Không bắt buộc)</label>
                 <textarea id="vocab-ex" rows="2" class="w-full px-4 py-2.5 text-sm resize-none" placeholder="VD: We need to protect the environment."></textarea>
             </div>
-            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl mt-4 shadow-[0_0_15px_rgba(245,158,11,0.3)]">Lưu vào Kho từ</button>
+            <button type="submit" id="btn-save-vocab" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl mt-4 shadow-[0_0_15px_rgba(245,158,11,0.3)]">Lưu vào Kho từ</button>
         </form>
     </div>
 
@@ -894,7 +922,7 @@
         </div>
         
         <div class="flex-1 flex flex-col items-center justify-center p-4">
-            <div id="quiz-container" class="w-full max-w-lg bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
+            <div id="quiz-container" class="w-full max-w-lg bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 hidden">
                 <div class="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
                     <span id="quiz-progress-text">Câu 1 / 10</span>
                     <span>Điểm: <span id="quiz-score" class="text-amber-500 text-lg">0</span></span>
@@ -920,7 +948,24 @@
         </div>
     </div>
 
-    <!-- LOGIC ỨNG DỤNG (ĐÃ GỘP APP.JS VÀO ĐÂY ĐỂ TRÁNH LỖI CORS FILE:///) -->
+    <!-- 8. Modal: Nhiệm vụ tuần của Học sinh -->
+    <div id="modal-student-tasks" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-blue-900/50 flex justify-between items-center bg-blue-900/20">
+            <h3 class="font-black text-blue-400 text-lg flex items-center"><i class="fa-solid fa-list-check mr-2"></i> Nhiệm vụ tuần này</h3>
+            <button class="btn-close-modal text-blue-400 hover:text-white bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 bg-slate-900 max-h-[60vh] overflow-y-auto">
+            <div id="st-tasks-list" class="space-y-3">
+                <!-- JS render -->
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-slate-800 bg-slate-800 flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-500"><i class="fa-regular fa-clock mr-1"></i> Deadline: CN 21:00</span>
+            <button class="btn-close-modal px-5 py-2 bg-slate-700 text-slate-200 rounded-xl hover:bg-slate-600 font-bold transition-colors">Đã hiểu</button>
+        </div>
+    </div>
+
+    <!-- LOGIC ỨNG DỤNG -->
     <script type="module">
         // 1. THƯ VIỆN & CẤU HÌNH
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -928,7 +973,6 @@
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // Đã sửa lại định dạng URL hợp lệ để tránh sập app lúc load đầu tiên. Bạn vẫn phải thay Key của bạn vào nhé.
         const supabaseUrl = 'https://skcvsdtbklyiozjtkizv.supabase.co'; 
         const supabaseKey = 'sb_publishable_R5np-ctCeEkUEPePj6YOkA_0QE9yRYy';
         let supabase;
@@ -950,38 +994,40 @@
 
         // 2. BIẾN TOÀN CỤC & SEED DATA 
         let currentUser = null, userData = null, currentWeek = null, isInitializingDB = false, quillEditor = null, unsubscribers = [], teacherChartInstance = null, studentChartInstance = null;
+        window.allMaterials = []; 
+        window.currentStudentTasks = []; 
 
         const USERS_SEED = [
-    { username: 'admin.hamy', pass: 'HaMy@2025', name: 'Nguyễn Hà My', role: 'admin', class: null },
-    { username: 'gv.hangnga', pass: 'HangNga@2025', name: 'Hoàng Thị Hằng Nga', role: 'teacher', class: null },
-    { username: 'gv.honghong', pass: 'Hong@2025', name: 'Đinh Thị Hồng', role: 'teacher', class: null },
-    // 10A1
-    ...[
-        'Hà Thị Bình An','Lê Diệu An','Nguyễn Đức Anh','Nguyễn Hà Anh','Tôn Nguyễn Hà Anh',
-        'Hoàng Gia Bảo','Bùi Thùy Chi','Đoàn Mạnh Duy','Nguyễn Thị Thu Duyên','Đinh Khánh Dương',
-        'Trần Tiến Đạt','Lê Đình Đăng','Hoàng Minh Đức','Hoàng Kiều Thái Hà','Lê Thanh Hà',
-        'Cà Trung Hải','Nguyễn Gia Hân','Hà Việt Hùng','Đinh Thế Khải','Hà Duy Khang',
-        'Mai Chí Khang','Phương Đăng Khanh','Trần Nguyễn Quỳnh Lam','Vũ Anh Minh','Hoàng Thanh Ngân',
-        'Khuất Bảo Ngọc','Kiều Bảo Ngọc','Phạm Yến Nhi','Lò Thị Oanh','Nguyễn Gia Phúc',
-        'Nguyễn Huy Phúc','Phạm Nguyễn Hữu Thắng','Tạ Ngọc Trâm','Nguyễn Đức Trung','Nguyễn Công Tùng'
-    ].map((name, i) => {
-        const usernames10a1 = ['binh.an','dieu.an','duc.anh','ha.anh1','ha.anh2','gia.bao','thuy.chi','manh.duy','thu.duyen','khanh.duong','tien.dat','dinh.dang','minh.duc','thai.ha','thanh.ha','trung.hai','gia.han','viet.hung','the.khai','duy.khang','chi.khang','dang.khanh','quynh.lam','anh.minh','thanh.ngan','bao.ngoc1','bao.ngoc2','yen.nhi','thi.oanh','gia.phuc','huy.phuc','huu.thang','ngoc.tram','duc.trung','cong.tung'];
-        return { username: `${usernames10a1[i]}_10a1`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH1' };
-    }),
-    // 10A2
-    ...[
-        'Đỗ Thiên An','Nguyễn Thiên An','Vũ Bảo An','Mai Lâm Anh','Nguyễn Bùi Phương Anh',
-        'Nguyễn Tùng Bách','Phan An Bình','Lò Thị Vân Dung','Đỗ Nguyễn Anh Đức','Bùi Ngọc Hà',
-        'Bùi Hoàng Hiệp','Bùi Huy Hoàng','Nguyễn Gia Huy','Trần Gia Huy','Lưu Nguyễn Minh Huyền',
-        'Đỗ Việt Hưng','Dương Hà Khánh','Đinh Gia Khánh','Hoàng Nam Khánh','Bùi Hà Linh',
-        'Bùi Linh Linh','Nguyễn Thùy Linh','Hoàng Gia Long','Nguyễn Ngọc Mai','Nguyễn Hoàng Minh',
-        'Trần Hoàng Minh','Hoàng Khánh Ngọc','Nguyễn Ánh Ngọc','Hoàng Quỳnh Phương','Nguyễn Minh Quân',
-        'Vương Chí Thành','Phạm Khánh Thy','Nguyễn Bảo Trâm','Nguyễn Huy Vũ','Lường Trúc Vy'
-    ].map((name, i) => {
-        const usernames10a2 = ['thien.an','thien.an2','bao.an','lam.anh','phuong.anh','tung.bach','an.binh','van.dung','anh.duc','ngoc.ha','hoang.hiep','huy.hoang','gia.huy','gia.huy2','minh.huyen','viet.hung','ha.khanh','gia.khanh','nam.khanh','ha.linh','linh.linh','thuy.linh','gia.long','ngoc.mai','hoang.minh','hoang.minh2','khanh.ngoc','anh.ngoc','quynh.phuong','minh.quan','chi.thanh','khanh.thy','bao.tram','huy.vu','truc.vy'];
-        return { username: `${usernames10a2[i]}_10a2`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH2' };
-    })
-];
+            { username: 'admin.hamy', pass: 'HaMy@2025', name: 'Nguyễn Hà My', role: 'admin', class: null },
+            { username: 'gv.hangnga', pass: 'HangNga@2025', name: 'Hoàng Thị Hằng Nga', role: 'teacher', class: null },
+            { username: 'gv.honghong', pass: 'Hong@2025', name: 'Đinh Thị Hồng', role: 'teacher', class: null },
+            // 10A1
+            ...[
+                'Hà Thị Bình An','Lê Diệu An','Nguyễn Đức Anh','Nguyễn Hà Anh','Tôn Nguyễn Hà Anh',
+                'Hoàng Gia Bảo','Bùi Thùy Chi','Đoàn Mạnh Duy','Nguyễn Thị Thu Duyên','Đinh Khánh Dương',
+                'Trần Tiến Đạt','Lê Đình Đăng','Hoàng Minh Đức','Hoàng Kiều Thái Hà','Lê Thanh Hà',
+                'Cà Trung Hải','Nguyễn Gia Hân','Hà Việt Hùng','Đinh Thế Khải','Hà Duy Khang',
+                'Mai Chí Khang','Phương Đăng Khanh','Trần Nguyễn Quỳnh Lam','Vũ Anh Minh','Hoàng Thanh Ngân',
+                'Khuất Bảo Ngọc','Kiều Bảo Ngọc','Phạm Yến Nhi','Lò Thị Oanh','Nguyễn Gia Phúc',
+                'Nguyễn Huy Phúc','Phạm Nguyễn Hữu Thắng','Tạ Ngọc Trâm','Nguyễn Đức Trung','Nguyễn Công Tùng'
+            ].map((name, i) => {
+                const usernames10a1 = ['binh.an','dieu.an','duc.anh','ha.anh1','ha.anh2','gia.bao','thuy.chi','manh.duy','thu.duyen','khanh.duong','tien.dat','dinh.dang','minh.duc','thai.ha','thanh.ha','trung.hai','gia.han','viet.hung','the.khai','duy.khang','chi.khang','dang.khanh','quynh.lam','anh.minh','thanh.ngan','bao.ngoc1','bao.ngoc2','yen.nhi','thi.oanh','gia.phuc','huy.phuc','huu.thang','ngoc.tram','duc.trung','cong.tung'];
+                return { username: `${usernames10a1[i]}_10a1`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH1' };
+            }),
+            // 10A2
+            ...[
+                'Đỗ Thiên An','Nguyễn Thiên An','Vũ Bảo An','Mai Lâm Anh','Nguyễn Bùi Phương Anh',
+                'Nguyễn Tùng Bách','Phan An Bình','Lò Thị Vân Dung','Đỗ Nguyễn Anh Đức','Bùi Ngọc Hà',
+                'Bùi Hoàng Hiệp','Bùi Huy Hoàng','Nguyễn Gia Huy','Trần Gia Huy','Lưu Nguyễn Minh Huyền',
+                'Đỗ Việt Hưng','Dương Hà Khánh','Đinh Gia Khánh','Hoàng Nam Khánh','Bùi Hà Linh',
+                'Bùi Linh Linh','Nguyễn Thùy Linh','Hoàng Gia Long','Nguyễn Ngọc Mai','Nguyễn Hoàng Minh',
+                'Trần Hoàng Minh','Hoàng Khánh Ngọc','Nguyễn Ánh Ngọc','Hoàng Quỳnh Phương','Nguyễn Minh Quân',
+                'Vương Chí Thành','Phạm Khánh Thy','Nguyễn Bảo Trâm','Nguyễn Huy Vũ','Lường Trúc Vy'
+            ].map((name, i) => {
+                const usernames10a2 = ['thien.an','thien.an2','bao.an','lam.anh','phuong.anh','tung.bach','an.binh','van.dung','anh.duc','ngoc.ha','hoang.hiep','huy.hoang','gia.huy','gia.huy2','minh.huyen','viet.hung','ha.khanh','gia.khanh','nam.khanh','ha.linh','linh.linh','thuy.linh','gia.long','ngoc.mai','hoang.minh','hoang.minh2','khanh.ngoc','anh.ngoc','quynh.phuong','minh.quan','chi.thanh','khanh.thy','bao.tram','huy.vu','truc.vy'];
+                return { username: `${usernames10a2[i]}_10a2`, pass: 'Hs@123456', name: name, role: 'student', class: '10ANH2' };
+            })
+        ];
 
         // 3. UTILITY FUNCTIONS
         const $ = (id) => document.getElementById(id);
@@ -989,7 +1035,6 @@
         function showToast(message, type = 'success') {
             const container = $('toast-container');
             const toast = document.createElement('div');
-            // Đổi màu Toast phù hợp Dark mode
             const colors = type === 'success' ? 'bg-green-600 border-green-500' : type === 'error' ? 'bg-red-600 border-red-500' : 'bg-blue-600 border-blue-500';
             const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle';
             
@@ -1026,6 +1071,29 @@
         }
 
         function clearAllUnsubscribers() { unsubscribers.forEach(unsub => unsub()); unsubscribers = []; }
+
+        // ================= HÀM XỬ LÝ TÊN FILE (BỎ DẤU TIẾNG VIỆT VÀ KÝ TỰ ĐẶC BIỆT) =================
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
+            str = str.replace(/đ/g,"d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            // Xóa các ký tự đặc biệt, chỉ giữ lại chữ cái, số, dấu chấm và gạch dưới, khoảng trắng
+            str = str.replace(/[^a-zA-Z0-9._ ]/g, "");
+            // Thay khoảng trắng bằng gạch dưới
+            str = str.replace(/\s+/g, '_');
+            return str;
+        }
 
         // 4. DB INIT
         async function checkAndInitDatabase() {
@@ -1119,6 +1187,7 @@
                 createNavItem('nav-teacher-weeks', 'fa-calendar-week', 'Quản lý Tuần', 'view-teacher-weeks');
                 createNavItem('nav-teacher-materials', 'fa-folder-open', 'Tài liệu học', 'view-teacher-materials');
                 createNavItem('nav-teacher-grading', 'fa-marker', 'Chấm điểm', 'view-teacher-grading');
+                createNavItem('nav-teacher-vocab', 'fa-book-open-reader', 'Quản lý Từ vựng', 'view-teacher-vocab');
                 createNavItem('nav-qa', 'fa-comments', 'Hỏi Đáp (Q&A)', 'view-shared-qa');
             } else {
                 createNavItem('nav-student-dashboard', 'fa-house', 'Trang chủ', 'view-student-dashboard', true);
@@ -1166,6 +1235,7 @@
             unsubscribers.push(unsub);
         }
 
+        // ================= ĐÃ SỬA LỖI TRANG TRẮNG VÀ GỘP DANH SÁCH USERS VÀO ĐÂY =================
         function setupListeners() {
             unsubscribers.push(onSnapshot(collection(db, "submissions"), (snap) => {
                 let allSubs = []; snap.forEach(doc => allSubs.push({id: doc.id, ...doc.data()}));
@@ -1184,6 +1254,7 @@
                 let mats = []; let totalSize = 0;
                 snap.forEach(doc => { let d = {id: doc.id, ...doc.data()}; mats.push(d); if(d.fileSize) totalSize += d.fileSize; });
                 if($('storage-used')) $('storage-used').innerText = (totalSize / (1024*1024)).toFixed(2) + " MB";
+                window.allMaterials = mats;
                 renderMaterials(mats); $('filter-material-week').onchange = () => renderMaterials(mats);
                 if($('filter-material-class')) $('filter-material-class').onchange = () => renderMaterials(mats);
             }));
@@ -1200,6 +1271,26 @@
                     window.studentVocabs = []; snap.forEach(doc => window.studentVocabs.push({id: doc.id, ...doc.data()}));
                     renderVocabulary();
                 }));
+            } else {
+                // [FIX] Tải danh sách Users để đối chiếu Tên Học Sinh
+                unsubscribers.push(onSnapshot(collection(db, "users"), (snap) => {
+                    window.allUsersDict = {};
+                    snap.forEach(doc => { 
+                        window.allUsersDict[doc.id] = doc.data(); 
+                    });
+                    renderTeacherVocabulary(); 
+                }));
+
+                // [FIX] Tải danh sách Từ vựng
+                unsubscribers.push(onSnapshot(collection(db, "vocabulary"), (snap) => {
+                    window.allStudentVocabs = []; 
+                    snap.forEach(doc => window.allStudentVocabs.push({id: doc.id, ...doc.data()}));
+                    renderTeacherVocabulary(); 
+                }));
+
+                if(document.getElementById('filter-teacher-vocab-class')) {
+                    document.getElementById('filter-teacher-vocab-class').onchange = () => renderTeacherVocabulary();
+                }
             }
         }
 
@@ -1221,7 +1312,7 @@
             }, 1000);
         }
 
-        // 8. ADMIN / TEACHER
+        // 8. ADMIN / TEACHER LOGIC
         if($('btn-show-create-week')) {
             $('btn-show-create-week').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-create-week').classList.remove('hidden'); };
             $('form-create-week').onsubmit = async (e) => {
@@ -1296,13 +1387,21 @@
                 if(file) {
                     if(file.size > 50*1024*1024) throw new Error("File > 50MB. Dùng Link!");
                     $('um-progress-container').classList.remove('hidden');
-                    const filePath = `materials/${Date.now()}_${file.name.replace(/\s+/g, '_')}`; 
+                    
+                    const safeFileName = removeVietnameseTones(file.name);
+                    const filePath = `materials/${Date.now()}_${safeFileName}`; 
+                    
                     const { error } = await supabase.storage.from('materials').upload(filePath, file);
                     if (error) throw new Error(error.message);
+                    
                     docData.fileUrl = supabase.storage.from('materials').getPublicUrl(filePath).data.publicUrl;
-                    docData.fileName = file.name; docData.fileSize = file.size; docData.fileType = 'upload';
+                    docData.fileName = file.name; 
+                    docData.fileSize = file.size; docData.fileType = 'upload';
                     $('um-progress-bar').style.width = '100%'; await addDoc(collection(db, "materials"), docData);
-                } else { docData.fileUrl = link; docData.fileType = 'link'; await addDoc(collection(db, "materials"), docData); }
+                } else { 
+                    docData.fileUrl = link; docData.fileType = 'link'; 
+                    await addDoc(collection(db, "materials"), docData); 
+                }
                 showToast("Thêm tài liệu thành công!"); $('form-upload-material').reset(); document.querySelector('#modal-upload-material .btn-close-modal').click();
             } catch (err) { showToast("Lỗi: " + err.message, "error"); } 
             finally { btn.disabled = false; btn.innerHTML = 'Xác nhận đăng tài liệu'; $('um-progress-container').classList.add('hidden'); }
@@ -1311,6 +1410,7 @@
         function renderMaterials(materials) {
             const w = $('filter-material-week').value; const c = $('filter-material-class') ? $('filter-material-class').value : 'ALL';
             let filtered = materials.filter(m => m.weekId === w && (userData.role === 'student' ? (m.class === 'ALL' || m.class === userData.class) : (c === 'ALL' || m.class === c || m.class === 'ALL')));
+            window.currentFilteredMaterials = filtered; 
             const icons = { listening: 'fa-headphones text-blue-400', speaking: 'fa-microphone text-orange-400', reading: 'fa-book-open text-green-400', writing: 'fa-pen text-purple-400', vocabulary: 'fa-spell-check text-amber-400' };
             
             $('grid-materials-teacher').innerHTML = filtered.map(m => `
@@ -1320,7 +1420,7 @@
                         <div class="flex-1 overflow-hidden">
                             <h4 class="font-bold text-slate-100 text-sm truncate" title="${m.title}">${m.title}</h4>
                             <p class="text-xs text-slate-500 mt-1 font-medium">Lớp: ${m.class === 'ALL' ? 'Chung' : m.class}</p>
-                            <a href="${m.fileUrl}" target="_blank" class="inline-block mt-3 text-[13px] font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg hover:bg-amber-900/40"><i class="fa-solid ${m.fileType==='link' ? 'fa-link' : 'fa-download'} mr-1"></i>${m.fileType==='link' ? 'Mở Link' : 'Tải xuống'}</a>
+                            <a href="${m.fileUrl}" ${m.fileType==='upload' ? 'download' : 'target="_blank"'} class="inline-block mt-3 text-[13px] font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg hover:bg-amber-900/40"><i class="fa-solid ${m.fileType==='link' ? 'fa-link' : 'fa-download'} mr-1"></i>${m.fileType==='link' ? 'Mở Link' : 'Tải xuống'}</a>
                         </div>
                     </div>
                     ${userData.role === 'admin' ? `<button onclick="deleteMaterial('${m.id}', '${m.fileType}', '${m.fileUrl}')" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 bg-slate-900 border border-slate-700 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
@@ -1336,7 +1436,49 @@
             } catch(e) { showToast("Lỗi xóa", "error"); }
         }
 
-        // TÍNH NĂNG RESET PASSWORD CHO ADMIN
+        $('btn-download-all-materials').addEventListener('click', async () => {
+            if(!window.currentFilteredMaterials || window.currentFilteredMaterials.length === 0) return showToast("Không có tài liệu nào để tải!", "error");
+            
+            const btn = $('btn-download-all-materials');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang nén file...';
+            btn.disabled = true;
+
+            const zip = new JSZip();
+            const folderName = `Tai_lieu_T${$('filter-material-week').options[$('filter-material-week').selectedIndex].text.replace(/\s+/g, '_')}`;
+            const folder = zip.folder(folderName);
+            let hasFiles = false;
+
+            try {
+                for(let m of window.currentFilteredMaterials) {
+                    if(m.fileType === 'upload') {
+                        try {
+                            const response = await fetch(m.fileUrl);
+                            if (!response.ok) throw new Error("Network response was not ok");
+                            const blob = await response.blob();
+                            folder.file(m.fileName || `${m.title}.file`, blob);
+                            hasFiles = true;
+                        } catch (err) {
+                            console.warn(`Lỗi khi tải file ${m.title}:`, err);
+                        }
+                    }
+                }
+                
+                if(!hasFiles) {
+                    showToast("Chỉ có Link hoặc lỗi CORS từ Cloud. Vui lòng tải từng file.", "error");
+                } else {
+                    const content = await zip.generateAsync({type:"blob"});
+                    saveAs(content, `${folderName}.zip`);
+                    showToast("Tải file ZIP thành công!");
+                }
+            } catch (error) {
+                showToast("Lỗi nén file: " + error.message, "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
         window.forceResetPassword = async (studentUsername) => {
             if(!confirm(`Yêu cầu học sinh ${studentUsername} đổi lại mật khẩu ở lần đăng nhập tới?`)) return;
             try {
@@ -1408,6 +1550,51 @@
             } catch(err) { showToast("Lỗi: " + err.message, "error"); }
         }
 
+        // ================= [ĐÃ SỬA LỖI TRANG TRẮNG] QUẢN LÝ TỪ VỰNG =================
+        function renderTeacherVocabulary() {
+            if(!window.allStudentVocabs || !document.getElementById('table-teacher-vocab')) return;
+            const c = document.getElementById('filter-teacher-vocab-class') ? document.getElementById('filter-teacher-vocab-class').value : 'ALL';
+            
+            let processedVocabs = window.allStudentVocabs.map(v => {
+                let sName = v.studentName;
+                let sClass = v.studentClass;
+                
+                // Nếu thiếu thông tin, tìm đối chiếu từ UserID
+                if((!sName || !sClass) && window.allUsersDict && v.studentId) {
+                    let user = window.allUsersDict[v.studentId];
+                    if(user) {
+                        sName = user.fullName;
+                        sClass = user.class;
+                    }
+                }
+                return { ...v, displayStudentName: sName, displayStudentClass: sClass };
+            });
+
+            let filtered = processedVocabs;
+            if(c !== 'ALL') filtered = filtered.filter(v => v.displayStudentClass === c);
+
+            document.getElementById('table-teacher-vocab').innerHTML = filtered.map(v => {
+                // Ép kiểu String an toàn để tránh lỗi khi người dùng nhập số (TypeError replace is not a function)
+                let enSafe = String(v.en || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                let viSafe = String(v.vi || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                let exSafe = String(v.ex || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                
+                return `
+                <tr class="hover:bg-slate-700/50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-200">${v.displayStudentName || 'Không rõ'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 text-[10px] font-black text-slate-400 bg-slate-900 rounded uppercase border border-slate-700">${v.displayStudentClass || 'Chưa cập nhật'}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-blue-400">${v.en || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-amber-500">${v.vi || ''}</td>
+                    <td class="px-6 py-4 text-sm text-slate-400 italic max-w-[200px] truncate">${v.ex || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <button onclick="editVocab('${v.id}', '${enSafe}', '${viSafe}', '${exSafe}')" class="text-blue-400 hover:text-blue-300 bg-slate-800 p-2 rounded-lg border border-slate-700 mr-1"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteVocab('${v.id}')" class="text-red-400 hover:text-red-300 bg-slate-800 p-2 rounded-lg border border-slate-700"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="text-center py-10 text-slate-500 font-medium">Chưa có từ vựng nào.</td></tr>';
+        }
+
         // 9. STUDENT LOGIC
         function renderStudentDashboard(mySubs) {
             if(!currentWeek) return;
@@ -1443,6 +1630,34 @@
             studentChartInstance = new Chart($('student-progress-chart').getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'Nghe', data: getData('listening'), borderColor: '#60a5fa' }, { label: 'Từ vựng', data: getData('vocabulary'), borderColor: '#fbbf24' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } } }, plugins: { legend: { labels: { color: '#f8fafc' } } } } });
         }
 
+        if($('btn-show-student-tasks')) {
+            $('btn-show-student-tasks').onclick = () => {
+                if(!currentWeek) return showToast("Chưa có tuần học nào đang mở.", "error");
+                const myTasks = window.allMaterials.filter(m => m.weekId === currentWeek.id && (m.class === 'ALL' || m.class === userData.class));
+                const icons = { listening: 'fa-headphones text-blue-400', speaking: 'fa-microphone text-orange-400', reading: 'fa-book-open text-green-400', writing: 'fa-pen text-purple-400', vocabulary: 'fa-spell-check text-amber-400' };
+
+                if(myTasks.length === 0) {
+                    $('st-tasks-list').innerHTML = '<p class="text-center text-slate-500 font-medium py-6">Tuần này giáo viên chưa giao bài cho lớp của bạn.</p>';
+                } else {
+                    $('st-tasks-list').innerHTML = myTasks.map(m => `
+                        <div class="flex items-center justify-between bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-sm hover:border-blue-500/50 transition-colors">
+                            <div class="flex items-center gap-3 w-3/4">
+                                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center flex-shrink-0 border border-slate-700"><i class="fa-solid ${icons[m.type]} text-lg"></i></div>
+                                <div class="truncate">
+                                    <h4 class="font-bold text-slate-200 text-sm truncate" title="${m.title}">${m.title}</h4>
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase">${m.type}</span>
+                                </div>
+                            </div>
+                            <a href="${m.fileUrl}" ${m.fileType==='upload' ? 'download' : 'target="_blank"'} class="bg-blue-900/30 text-blue-400 border border-blue-800/50 px-3 py-2 rounded-lg font-bold text-xs hover:bg-blue-900/50 transition-colors whitespace-nowrap"><i class="fa-solid ${m.fileType==='link' ? 'fa-arrow-up-right-from-square' : 'fa-download'}"></i> Mở</a>
+                        </div>
+                    `).join('');
+                }
+                
+                $('modal-backdrop').classList.remove('hidden'); 
+                $('modal-student-tasks').classList.remove('hidden');
+            };
+        }
+
         $('submission-form').onsubmit = async (e) => {
             e.preventDefault(); if(window.isWeekLocked) return showToast("Đã quá hạn!", "error");
             if(!supabaseUrl || supabaseUrl.includes("YOUR_PROJECT_ID")) return showToast("Chưa cấu hình Supabase URL", "error");
@@ -1456,15 +1671,21 @@
                 const existDoc = snap.docs.find(d => d.data().weekId === currentWeek.id);
                 let subData = { weekId: currentWeek.id, studentId: currentUser.uid, studentUsername: userData.username, studentName: userData.fullName, class: userData.class, textContent: content, submittedAt: serverTimestamp(), gradeScale: currentWeek.gradingScale };
                 let filesArr = existDoc ? (existDoc.data().files || []) : []; if(link) filesArr.push({ name: 'Link bài tập', url: link, type: 'link' });
+                
                 if(file) {
                     if(file.size > 50*1024*1024) throw new Error("File > 50MB!");
                     $('sub-upload-progress-container').classList.remove('hidden');
-                    const filePath = `submissions/${currentUser.uid}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                    
+                    const safeFileName = removeVietnameseTones(file.name);
+                    const filePath = `submissions/${currentUser.uid}_${Date.now()}_${safeFileName}`;
+                    
                     const { error } = await supabase.storage.from('materials').upload(filePath, file);
                     if (error) throw new Error(error.message);
+                    
                     filesArr.push({ name: file.name, url: supabase.storage.from('materials').getPublicUrl(filePath).data.publicUrl, type: 'upload' });
                     $('sub-upload-bar').style.width = '100%'; $('sub-upload-percent').innerText = '100%';
                 }
+                
                 subData.files = filesArr;
                 if(!existDoc) await addDoc(collection(db, "submissions"), subData); else await updateDoc(doc(db, "submissions", existDoc.id), subData);
                 showToast("Nộp bài thành công!"); $('sub-file-input').value = ''; $('sub-link-input').value = '';
@@ -1500,31 +1721,136 @@
             $('modal-backdrop').classList.remove('hidden'); $('modal-view-peer').classList.remove('hidden');
         };
 
-        // 10. VOCAB & Q&A (Rút gọn hiển thị cơ bản)
-        $('btn-show-add-vocab').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-add-vocab').classList.remove('hidden'); };
-        $('form-add-vocab').onsubmit = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "vocabulary"), { studentId: currentUser.uid, en: $('vocab-en').value, vi: $('vocab-vi').value, ex: $('vocab-ex').value, createdAt: serverTimestamp() }); showToast("Đã lưu từ vựng!"); $('form-add-vocab').reset(); document.querySelector('#modal-add-vocab .btn-close-modal').click(); } catch(e) { showToast(e.message, "error"); } };
+        // 10. VOCAB & Q&A
+        $('btn-show-add-vocab').onclick = () => { 
+            $('vocab-id-edit').value = '';$('vocab-modal-title').innerHTML = '<i class="fa-solid fa-spell-check mr-2"></i> Thêm từ mới';
+            $('form-add-vocab').reset();
+            $('modal-backdrop').classList.remove('hidden');$('modal-add-vocab').classList.remove('hidden'); 
+        };
+
+        window.editVocab = (id, en, vi, ex) => {
+            $('vocab-id-edit').value = id;
+            $('vocab-en').value = en;
+            $('vocab-vi').value = vi;
+            $('vocab-ex').value = ex;
+            $('vocab-modal-title').innerHTML = '<i class="fa-solid fa-pen mr-2"></i> Sửa từ vựng';
+            $('modal-backdrop').classList.remove('hidden');$('modal-add-vocab').classList.remove('hidden'); 
+        };
+
+        $('form-add-vocab').onsubmit = async (e) => { 
+            e.preventDefault(); 
+            const vId = $('vocab-id-edit').value;
+            const data = { en: $('vocab-en').value, vi: $('vocab-vi').value, ex:$('vocab-ex').value };
+            
+            try { 
+                if(vId) {
+                    await updateDoc(doc(db, "vocabulary", vId), data);
+                    showToast("Đã cập nhật từ vựng!");
+                } else {
+                    data.studentId = currentUser.uid;
+                    data.studentName = userData.fullName;
+                    data.studentClass = userData.class;
+                    data.createdAt = serverTimestamp();
+                    await addDoc(collection(db, "vocabulary"), data); 
+                    showToast("Đã lưu từ vựng mới!"); 
+                }
+                $('form-add-vocab').reset(); 
+                document.querySelector('#modal-add-vocab .btn-close-modal').click(); 
+            } catch(e) { showToast(e.message, "error"); } 
+        };
+
         function renderVocabulary() {
-            $('grid-vocabulary').innerHTML = (window.studentVocabs || []).map(v => `
+            $('grid-vocabulary').innerHTML = (window.studentVocabs || []).map(v => {
+                let enSafe = String(v.en || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                let viSafe = String(v.vi || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                let exSafe = String(v.ex || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                return `
                 <div class="bg-slate-900 p-5 rounded-2xl shadow-inner border border-slate-700 hover:border-amber-500 transition-colors group relative">
                     <h3 class="text-xl font-black text-slate-100 mb-1">${v.en}</h3>
                     <p class="text-sm font-bold text-amber-500 mb-2">${v.vi}</p>
                     ${v.ex ? `<p class="text-xs text-slate-400 italic bg-slate-950 border border-slate-800 p-2 rounded-lg">"${v.ex}"</p>` : ''}
+                    <button onclick="editVocab('${v.id}', '${enSafe}', '${viSafe}', '${exSafe}')" class="absolute top-4 right-12 text-slate-600 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-pen"></i></button>
                     <button onclick="deleteVocab('${v.id}')" class="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
                 </div>
-            `).join('') || `<div class="col-span-full text-center py-20 text-slate-500 flex flex-col items-center"><i class="fa-solid fa-box-open text-5xl mb-4 opacity-30"></i><p class="font-medium text-lg text-slate-400">Kho từ vựng trống.</p></div>`;
+            `}).join('') || `<div class="col-span-full text-center py-20 text-slate-500 flex flex-col items-center"><i class="fa-solid fa-box-open text-5xl mb-4 opacity-30"></i><p class="font-medium text-lg text-slate-400">Kho từ vựng trống. Hãy thêm từ mới nhé!</p></div>`;
         }
-        window.deleteVocab = async (id) => { if(confirm("Xóa từ này?")) await deleteDoc(doc(db, "vocabulary", id)); };
+        window.deleteVocab = async (id) => { if(confirm("Xóa từ này khỏi kho dữ liệu?")) await deleteDoc(doc(db, "vocabulary", id)); };
 
-        if($('btn-submit-qa')) {
-            $('btn-submit-qa').onclick = async () => {
+        // ================= TÍNH NĂNG FLASHCARD =================
+        let fcIndex = 0; let isFlipped = false;
+
+        function updateFlashcardUI() {
+            if(!window.studentVocabs || window.studentVocabs.length === 0) return;
+            const card = window.studentVocabs[fcIndex];
+            isFlipped = false; $('btn-fc-flip').classList.remove('flipped');
+            $('fc-en').innerText = card.en; $('fc-vi').innerText = card.vi;
+            if(card.ex) { $('fc-ex').innerText = `"${card.ex}"`; $('fc-ex').classList.remove('hidden'); } 
+            else { $('fc-ex').classList.add('hidden'); }$('fc-counter').innerText = `Thẻ ${fcIndex + 1} / ${window.studentVocabs.length}`;
+        }
+
+        $('btn-play-flashcard').onclick = () => {
+            if(!window.studentVocabs || window.studentVocabs.length === 0) return showToast("Bạn cần ít nhất 1 từ vựng để học Flashcard!", "error");
+            fcIndex = 0; updateFlashcardUI(); $('modal-flashcard').classList.remove('hidden');
+        };
+        $('btn-fc-flip').onclick = () => { isFlipped = !isFlipped; if(isFlipped) $('btn-fc-flip').classList.add('flipped'); else$('btn-fc-flip').classList.remove('flipped'); };
+        $('btn-fc-prev').onclick = (e) => { e.stopPropagation(); if(fcIndex > 0) { fcIndex--; updateFlashcardUI(); } };$('btn-fc-next').onclick = (e) => { e.stopPropagation(); if(fcIndex < window.studentVocabs.length - 1) { fcIndex++; updateFlashcardUI(); } };
+
+        // ================= TÍNH NĂNG QUIZ TRẮC NGHIỆM =================
+        let quizQuestions = []; let currentQIndex = 0; let quizScore = 0;
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+
+        $('btn-play-quiz').onclick = () => {
+            if(!window.studentVocabs || window.studentVocabs.length < 4) return showToast("Cần ít nhất 4 từ vựng trong kho để tạo trắc nghiệm!", "error");
+            quizQuestions = []; currentQIndex = 0; quizScore = 0; $('quiz-score').innerText = 0;
+            let pool = shuffleArray([...window.studentVocabs]); let totalQ = Math.min(10, pool.length);
+            
+            for(let i=0; i < totalQ; i++) {
+                let correctWord = pool[i]; let wrongWords = pool.filter(w => w.id !== correctWord.id);
+                wrongWords = shuffleArray(wrongWords).slice(0, 3); 
+                let options = [ { text: correctWord.vi, isCorrect: true }, { text: wrongWords[0].vi, isCorrect: false }, { text: wrongWords[1].vi, isCorrect: false }, { text: wrongWords[2].vi, isCorrect: false } ];
+                quizQuestions.push({ question: correctWord.en, options: shuffleArray(options) });
+            }
+            renderQuizQuestion();
+            $('quiz-container').classList.remove('hidden'); $('quiz-result').classList.add('hidden');$('modal-quiz').classList.remove('hidden');
+        };
+
+        function renderQuizQuestion() {
+            let q = quizQuestions[currentQIndex];
+            $('quiz-progress-text').innerText = `Câu ${currentQIndex + 1} / ${quizQuestions.length}`;
+            $('quiz-question').innerText = q.question;
+            $('quiz-options').innerHTML = q.options.map((opt, idx) => `
+                <button onclick="checkQuizAnswer(${idx})" class="quiz-btn w-full bg-slate-900 border border-slate-700 hover:border-amber-500 hover:bg-amber-900/20 text-slate-200 font-bold py-4 px-6 rounded-xl text-left transition-all text-lg shadow-sm">${opt.text}</button>
+            `).join('');
+        }
+
+        window.checkQuizAnswer = (optIndex) => {
+            const btns = document.querySelectorAll('.quiz-btn'); btns.forEach(b => b.disabled = true);
+            let isCorrect = quizQuestions[currentQIndex].options[optIndex].isCorrect;
+            
+            if(isCorrect) {
+                btns[optIndex].classList.add('bg-green-600', 'border-green-500', 'text-white'); btns[optIndex].classList.remove('bg-slate-900', 'hover:border-amber-500');
+                quizScore += 10; $('quiz-score').innerText = quizScore;
+            } else {
+                btns[optIndex].classList.add('bg-red-600', 'border-red-500', 'text-white'); btns[optIndex].classList.remove('bg-slate-900', 'hover:border-amber-500');
+                const correctIdx = quizQuestions[currentQIndex].options.findIndex(o => o.isCorrect);
+                btns[correctIdx].classList.add('bg-green-600', 'border-green-500', 'text-white'); btns[correctIdx].classList.remove('bg-slate-900');
+            }
+
+            setTimeout(() => {
+                currentQIndex++;
+                if(currentQIndex < quizQuestions.length) { renderQuizQuestion(); } 
+                else { $('quiz-container').classList.add('hidden'); $('quiz-final-score').innerText = quizScore; $('quiz-result').classList.remove('hidden'); }
+            }, 1000);
+        };
+
+        if($('btn-submit-qa')) {$('btn-submit-qa').onclick = async () => {
                 const text = $('qa-input-text').value; if(!text) return;
-                await addDoc(collection(db, "qa"), { weekId: $('filter-qa-week').value, studentId: currentUser.uid, studentName: userData.fullName, class: userData.class, question: text, isAnswered: false, createdAt: serverTimestamp() });
-                $('qa-input-text').value = ''; showToast("Gửi câu hỏi thành công!");
+                await addDoc(collection(db, "qa"), { weekId: $('filter-qa-week').value, studentId: currentUser.uid, studentName: userData.fullName, class: userData.class, question: text, isAnswered: false, createdAt: serverTimestamp() });$('qa-input-text').value = ''; showToast("Gửi câu hỏi thành công!");
             };
         }
 
         function renderQAList(qas) {
-            $('qa-thread-list').innerHTML = qas.filter(q => q.weekId === $('filter-qa-week').value).sort((a,b) => (a.isAnswered === b.isAnswered) ? 0 : a.isAnswered ? 1 : -1).map(q => `
+            $('qa-thread-list').innerHTML = qas.filter(q => q.weekId ===$('filter-qa-week').value).sort((a,b) => (a.isAnswered === b.isAnswered) ? 0 : a.isAnswered ? 1 : -1).map(q => `
                 <div class="bg-slate-800 p-5 rounded-2xl border ${q.isAnswered ? 'border-slate-700' : 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]'} shadow-sm relative group">
                     <div class="flex justify-between items-start mb-3">
                         <div class="flex items-center">
