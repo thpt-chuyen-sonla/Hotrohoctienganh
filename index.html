@@ -23,12 +23,15 @@
     <!-- JSZip & FileSaver (Tải file hàng loạt) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- SheetJS (Xuất Excel) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Bật dark mode
+            darkMode: 'class', 
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -42,16 +45,13 @@
     </script>
 
     <style>
-        /* Tùy chỉnh thanh cuộn tinh tế - Dark Mode */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        /* Ẩn phần tử */
         .hidden { display: none !important; }
 
-        /* Tùy chỉnh bộ soạn thảo Quill cho Dark Mode */
         .ql-toolbar.ql-snow { 
             border: 1px solid #334155 !important; 
             border-radius: 0.75rem 0.75rem 0 0 !important; 
@@ -73,12 +73,10 @@
             background-color: #0f172a;
         }
         
-        /* Khôi phục list-style cho Quill Editor hiển thị đúng Bullets/Numbers */
         .ql-editor ol { padding-left: 1.5em; list-style-type: decimal; }
         .ql-editor ul { padding-left: 1.5em; list-style-type: disc; }
         .ql-editor::before { color: #64748b !important; font-style: normal !important; }
 
-        /* Hiệu ứng lật thẻ Flashcard (3D) */
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
@@ -86,8 +84,7 @@
         .flashcard-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
         .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
 
-        /* Style chung cho Input và Select trong Dark Mode */
-        input[type="text"], input[type="password"], input[type="date"], input[type="url"], select, textarea {
+        input[type="text"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="url"], select, textarea {
             background-color: #1e293b !important;
             color: #f8fafc !important;
             border-color: #334155 !important;
@@ -97,6 +94,8 @@
             outline: none !important;
             box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
         }
+        /* Style icon lịch cho datetime-local */
+        ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans antialiased overflow-hidden h-screen flex flex-col transition-colors duration-200">
@@ -187,7 +186,6 @@
         
         <!-- SIDEBAR -->
         <aside id="sidebar" class="bg-slate-900 border-r border-slate-800 w-72 flex-shrink-0 flex flex-col transition-transform duration-300 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-[40]">
-            <!-- Logo -->
             <div class="h-20 flex items-center justify-between px-6 border-b border-slate-800 flex-shrink-0">
                 <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 tracking-tight">AMBER</h1>
                 <button id="btn-close-sidebar" class="text-slate-400 hover:text-white md:hidden bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center">
@@ -195,7 +193,6 @@
                 </button>
             </div>
             
-            <!-- User Info -->
             <div class="px-6 py-8 border-b border-slate-800 flex flex-col items-center">
                 <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-600 text-white rounded-full flex items-center justify-center text-2xl font-black mb-3 shadow-[0_0_15px_rgba(245,158,11,0.5)] border-2 border-slate-900">
                     <span id="nav-user-initial">A</span>
@@ -204,12 +201,10 @@
                 <span id="nav-user-role" class="text-[11px] font-bold px-3 py-1 bg-slate-800 border border-slate-700 text-amber-400 rounded-full uppercase tracking-wider">Role</span>
             </div>
 
-            <!-- Navigation Links -->
             <nav id="nav-menu" class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-                <!-- Sẽ được render động bằng JS -->
+                <!-- JS render -->
             </nav>
 
-            <!-- Logout -->
             <div class="p-4 border-t border-slate-800 bg-slate-900">
                 <button id="btn-logout" class="flex items-center justify-center w-full px-4 py-3 text-red-400 font-semibold hover:bg-red-900/30 hover:text-red-300 rounded-xl transition-colors border border-transparent hover:border-red-900/50">
                     <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Đăng xuất
@@ -219,8 +214,6 @@
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-950">
-            
-            <!-- Overlay for mobile sidebar -->
             <div id="sidebar-overlay" class="hidden fixed inset-0 bg-slate-950/80 z-[35] backdrop-blur-sm md:hidden transition-opacity"></div>
 
             <!-- HEADER -->
@@ -240,16 +233,22 @@
                 </div>
             </header>
 
-            <!-- SCROLLABLE VIEWS CONTAINER -->
             <div id="views-container" class="flex-1 overflow-y-auto p-4 sm:p-8 pb-24 scroll-smooth">
                 
                 <!-- ================= VÙNG HIỂN THỊ GIÁO VIÊN / ADMIN ================= -->
 
                 <!-- View: Teacher Dashboard -->
                 <div id="view-teacher-dashboard" class="view-section hidden space-y-8">
-                    <div>
-                        <h2 class="text-3xl font-black text-slate-100 tracking-tight">Tổng quan hệ thống</h2>
-                        <p class="text-slate-400 mt-1 font-medium">Theo dõi tiến độ nộp bài và tương tác của học sinh.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-100 tracking-tight">Tổng quan hệ thống</h2>
+                            <p class="text-slate-400 mt-1 font-medium">Theo dõi tiến độ nộp bài và tương tác của học sinh.</p>
+                        </div>
+                        <!-- BỘ LỌC TUẦN CHO DASHBOARD -->
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm font-bold text-slate-400 whitespace-nowrap">Xem số liệu của:</label>
+                            <select id="td-week-filter" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-amber-500 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm min-w-[180px]"></select>
+                        </div>
                     </div>
                     
                     <!-- Stats Grid -->
@@ -289,9 +288,9 @@
                         </div>
                         <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl shadow-lg border border-amber-700/50 flex flex-col justify-center items-center text-center relative overflow-hidden">
                             <i class="fa-regular fa-clock absolute text-9xl opacity-5 text-amber-500 -right-4 -bottom-4"></i>
-                            <h3 class="font-bold text-slate-300 mb-3 opacity-90 text-lg relative z-10">Deadline tuần này</h3>
+                            <h3 class="font-bold text-slate-300 mb-3 opacity-90 text-lg relative z-10">Deadline tuần đang xem</h3>
                             <div class="text-4xl sm:text-5xl font-black mb-4 font-mono tracking-wider relative z-10 text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" id="td-countdown">--:--:--</div>
-                            <p class="text-sm font-medium text-slate-400 bg-slate-950/50 px-4 py-1.5 rounded-full relative z-10 border border-slate-800">Kết thúc lúc 21:00 Chủ nhật</p>
+                            <p id="td-deadline-text" class="text-sm font-medium text-slate-400 bg-slate-950/50 px-4 py-1.5 rounded-full relative z-10 border border-slate-800">Đang tải...</p>
                             <button onclick="document.getElementById('nav-teacher-grading').click()" class="mt-8 bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all duration-200 relative z-10 w-full sm:w-auto">Chấm bài ngay</button>
                         </div>
                     </div>
@@ -346,10 +345,10 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h2 class="text-3xl font-black text-slate-100 tracking-tight">Tài liệu học tập</h2>
-                            <p class="text-slate-400 mt-1 font-medium">Quản lý bài giảng và file nghe/đọc.</p>
+                            <p class="text-slate-400 mt-1 font-medium">Quản lý bài giảng và file nghe/đọc được chia theo từng tuần.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <select id="filter-material-week" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-200 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none min-w-[150px]"></select>
+                            <!-- BỎ dropdown filter tuần ở đây -->
                             <select id="filter-material-class" class="border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-200 bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none">
                                 <option value="ALL">Tất cả lớp</option>
                                 <option value="10ANH1">10 Anh 1</option>
@@ -361,7 +360,6 @@
                         </div>
                     </div>
                     
-                    <!-- Storage & Bulk Download Bar -->
                     <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center text-sm shadow-sm gap-3">
                         <div class="flex items-center text-slate-400 font-medium">
                             <div class="w-8 h-8 rounded bg-slate-900 border border-slate-700 flex items-center justify-center mr-3 text-amber-500"><i class="fa-solid fa-hard-drive"></i></div>
@@ -372,13 +370,13 @@
                         </button>
                     </div>
 
-                    <!-- Materials Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="grid-materials-teacher">
-                        <!-- JS render -->
+                    <!-- Container hiển thị tài liệu chia theo tuần -->
+                    <div id="grouped-materials-container" class="space-y-8">
+                        <!-- JS Render -->
                     </div>
                 </div>
 
-                <!-- View: Teacher Từ vựng (QUẢN LÝ TỪ VỰNG HỌC SINH) -->
+                <!-- View: Teacher Từ vựng -->
                 <div id="view-teacher-vocab" class="view-section hidden space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -419,20 +417,26 @@
                             <h2 class="text-3xl font-black text-slate-100 tracking-tight">Chấm điểm bài nộp</h2>
                             <p class="text-slate-400 mt-1 font-medium">Đánh giá 5 kỹ năng và phản hồi học sinh.</p>
                         </div>
-                        <div class="flex flex-wrap gap-3 w-full md:w-auto bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-sm">
-                            <select id="filter-grade-week" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer"></select>
-                            <div class="w-px bg-slate-700 hidden sm:block"></div>
-                            <select id="filter-grade-class" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
-                                <option value="ALL">Cả 2 lớp</option>
-                                <option value="10ANH1">10 Anh 1</option>
-                                <option value="10ANH2">10 Anh 2</option>
-                            </select>
-                            <div class="w-px bg-slate-700 hidden sm:block"></div>
-                            <select id="filter-grade-status" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
-                                <option value="ALL">Tất cả bài</option>
-                                <option value="UNGRADED">Chưa chấm</option>
-                                <option value="GRADED">Đã chấm</option>
-                            </select>
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto items-center">
+                            <div class="flex bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-sm">
+                                <select id="filter-grade-week" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer"></select>
+                                <div class="w-px bg-slate-700 mx-2 hidden sm:block"></div>
+                                <select id="filter-grade-class" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
+                                    <option value="ALL">Cả 2 lớp</option>
+                                    <option value="10ANH1">10 Anh 1</option>
+                                    <option value="10ANH2">10 Anh 2</option>
+                                </select>
+                                <div class="w-px bg-slate-700 mx-2 hidden sm:block"></div>
+                                <select id="filter-grade-status" class="border-none bg-slate-900 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 focus:ring-0 cursor-pointer">
+                                    <option value="ALL">Tất cả bài</option>
+                                    <option value="UNGRADED">Chưa chấm</option>
+                                    <option value="GRADED">Đã chấm</option>
+                                </select>
+                            </div>
+                            <!-- NÚT XUẤT EXCEL -->
+                            <button id="btn-export-excel" class="bg-green-600 hover:bg-green-500 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)] transform hover:-translate-y-0.5 px-4 py-2.5 rounded-xl font-bold transition-all duration-200 flex items-center h-full">
+                                <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Xuất Excel
+                            </button>
                         </div>
                     </div>
                     
@@ -460,12 +464,10 @@
                     </div>
                 </div>
 
-
                 <!-- ================= VÙNG HIỂN THỊ HỌC SINH ================= -->
 
                 <!-- View: Student Dashboard -->
                 <div id="view-student-dashboard" class="view-section hidden space-y-6">
-                    <!-- Welcome Banner -->
                     <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-orange-700 rounded-3xl p-8 sm:p-10 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.5)] border border-amber-500/30 relative overflow-hidden text-white flex justify-between items-center">
                         <div class="relative z-10">
                             <h2 class="text-3xl sm:text-4xl font-black mb-2 tracking-tight drop-shadow-md">Xin chào, <span id="sd-fullname">Học sinh</span>! 👋</h2>
@@ -475,21 +477,18 @@
                         <i class="fa-solid fa-graduation-cap text-7xl opacity-20 absolute -right-4 -bottom-4 transform -rotate-12 z-0"></i>
                     </div>
                     
-                    <!-- Tuần & Nộp bài Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Tuần học info -->
                         <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col justify-between group hover:border-amber-500/50 transition-colors">
                             <div>
                                 <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Tuần học hiện tại</h3>
                                 <h2 class="text-2xl font-black text-slate-100" id="sd-current-week">Đang tải...</h2>
-                                <p class="text-sm text-slate-400 mt-2 font-medium"><i class="fa-regular fa-clock mr-1.5 text-amber-500"></i> Deadline: Chủ nhật lúc 21:00</p>
+                                <p id="sd-deadline-text" class="text-sm text-slate-400 mt-2 font-medium"><i class="fa-regular fa-clock mr-1.5 text-amber-500"></i> Đang tải Deadline...</p>
                             </div>
                             <div class="mt-6 bg-slate-900 rounded-2xl p-4 text-center border border-slate-700 group-hover:bg-amber-900/20 group-hover:border-amber-700/50 transition-colors shadow-inner">
                                 <span class="text-slate-300 group-hover:text-amber-400 font-mono text-3xl font-black tracking-widest transition-colors drop-shadow-sm" id="sd-countdown">--:--:--</span>
                             </div>
                         </div>
                         
-                        <!-- Status Card -->
                         <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col justify-center items-center text-center relative overflow-hidden">
                             <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-4">Trạng thái bài tập</h3>
                             <div id="sd-status-icon" class="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 bg-slate-900 text-slate-500 border border-slate-700 shadow-inner">
@@ -500,7 +499,6 @@
                         </div>
                     </div>
                     
-                    <!-- Biểu đồ -->
                     <div class="bg-slate-800 p-8 rounded-3xl shadow-lg border border-slate-700">
                         <div class="flex items-center mb-6">
                             <div class="w-10 h-10 rounded-xl bg-amber-900/30 border border-amber-800/50 flex items-center justify-center text-amber-500 mr-4 shadow-sm">
@@ -527,13 +525,11 @@
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- Form nộp bài (Chiếm 7 cột) -->
                         <div class="lg:col-span-7 bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col">
                             <h3 class="font-bold text-slate-200 text-lg border-b border-slate-700 pb-4 mb-6 flex items-center">
                                 <i class="fa-solid fa-pen-nib text-amber-500 mr-2"></i> Bài làm Tuần này
                             </h3>
                             
-                            <!-- Báo hết hạn -->
                             <div id="sub-locked-msg" class="hidden bg-red-900/30 text-red-400 border border-red-800/50 p-4 rounded-xl text-sm mb-6 font-medium flex items-center shadow-sm">
                                 <i class="fa-solid fa-lock text-lg mr-3"></i> Đã hết hạn. Bạn không thể thay đổi bài làm của tuần này.
                             </div>
@@ -564,7 +560,6 @@
                                         <input type="url" id="sub-link-input" placeholder="Link Google Drive / YouTube (Nên dùng nếu file > 50MB)" class="w-full pl-10 pr-4 py-3 text-sm bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-slate-200 font-medium placeholder-slate-500">
                                     </div>
                                     
-                                    <!-- Thanh upload -->
                                     <div id="sub-upload-progress-container" class="hidden mt-4 bg-slate-800 p-3 rounded-xl border border-amber-700/50 shadow-sm">
                                         <div class="flex justify-between text-xs font-bold mb-1.5 text-slate-300">
                                             <span><i class="fa-solid fa-spinner fa-spin text-amber-500 mr-1"></i> Đang tải file lên đám mây...</span>
@@ -580,7 +575,6 @@
                             </form>
                         </div>
 
-                        <!-- Điểm (Chiếm 5 cột) -->
                         <div class="lg:col-span-5 bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 flex flex-col">
                             <h3 class="font-bold text-slate-200 text-lg border-b border-slate-700 pb-4 mb-6 flex items-center">
                                 <i class="fa-solid fa-star text-amber-500 mr-2"></i> Kết quả chấm điểm
@@ -594,7 +588,6 @@
                         </div>
                     </div>
 
-                    <!-- Bảng Peer view -->
                     <div class="bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-700 mt-8">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700 pb-4">
                             <h3 class="font-bold text-slate-200 text-lg flex items-center">
@@ -661,7 +654,6 @@
                         <select id="filter-qa-week" class="border border-slate-700 bg-slate-900 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none w-full sm:w-auto shadow-sm"></select>
                     </div>
                     
-                    <!-- Form đặt câu hỏi (Chỉ Student) -->
                     <div id="qa-ask-container" class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-amber-700/50 hidden">
                         <h3 class="text-sm font-bold text-amber-500 mb-3 uppercase tracking-wider flex items-center">
                             <i class="fa-solid fa-comment-dots mr-2 text-lg"></i> Gửi câu hỏi cho Giáo viên
@@ -672,7 +664,6 @@
                         </div>
                     </div>
 
-                    <!-- Luồng câu hỏi -->
                     <div id="qa-thread-list" class="space-y-5">
                         <!-- JS render -->
                     </div>
@@ -703,11 +694,11 @@
                     <input type="date" id="cw-start" required class="w-full px-4 py-2.5 text-sm font-medium">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-300 mb-2">Hạn chót (CN)</label>
-                    <input type="date" id="cw-end" required class="w-full px-4 py-2.5 text-sm font-medium">
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Hạn chót & Giờ (Deadline)</label>
+                    <input type="datetime-local" id="cw-end" required class="w-full px-4 py-2.5 text-sm font-medium text-slate-200">
                 </div>
             </div>
-            <p class="text-[11px] font-bold text-amber-500 uppercase mt-[-10px]">Lưu ý: Mặc định khóa form vào 21:00 ngày kết thúc.</p>
+            <p class="text-[11px] font-bold text-amber-500 uppercase mt-[-10px]">Hệ thống sẽ tự động khóa form sau mốc thời gian này.</p>
             <div>
                 <label class="block text-sm font-bold text-slate-300 mb-2">Thang điểm áp dụng</label>
                 <select id="cw-scale" class="w-full px-4 py-2.5 text-sm font-medium">
@@ -718,6 +709,42 @@
             <div class="pt-4 flex justify-end gap-3 mt-2">
                 <button type="button" class="btn-close-modal px-5 py-2.5 text-slate-300 font-bold bg-slate-700 rounded-xl hover:bg-slate-600 transition-colors">Hủy</button>
                 <button type="submit" class="px-6 py-2.5 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 font-bold shadow-md transition-colors">Tạo tuần</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 1.1 Modal: Sửa Tuần (Giáo viên) -->
+    <div id="modal-edit-week" class="modal hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 z-[70] w-full max-w-md overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+            <h3 class="font-black text-slate-100 text-lg">Chỉnh sửa Tuần Học</h3>
+            <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-edit-week" class="p-6 space-y-5">
+            <input type="hidden" id="ew-id">
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Tên tuần</label>
+                <input type="text" id="ew-name" required class="w-full px-4 py-2.5 text-sm font-medium">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Ngày bắt đầu</label>
+                    <input type="date" id="ew-start" required class="w-full px-4 py-2.5 text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">Hạn chót & Giờ (Deadline)</label>
+                    <input type="datetime-local" id="ew-end" required class="w-full px-4 py-2.5 text-sm font-medium text-slate-200">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">Thang điểm áp dụng</label>
+                <select id="ew-scale" class="w-full px-4 py-2.5 text-sm font-medium">
+                    <option value="10">Thang điểm 10</option>
+                    <option value="100">Thang điểm 100</option>
+                </select>
+            </div>
+            <div class="pt-4 flex justify-end gap-3 mt-2">
+                <button type="button" class="btn-close-modal px-5 py-2.5 text-slate-300 font-bold bg-slate-700 rounded-xl hover:bg-slate-600 transition-colors">Hủy</button>
+                <button type="submit" class="px-6 py-2.5 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 font-bold shadow-md transition-colors">Lưu thay đổi</button>
             </div>
         </form>
     </div>
@@ -893,13 +920,11 @@
 
         <div class="relative w-full max-w-sm h-72 perspective-1000 cursor-pointer z-10" id="btn-fc-flip">
             <div id="fc-inner" class="flashcard-inner w-full h-full relative transform-style-3d shadow-[0_0_40px_rgba(0,0,0,0.5)] rounded-3xl">
-                <!-- Mặt trước -->
                 <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl backface-hidden flex flex-col items-center justify-center p-6 border-4 border-amber-500">
                     <span class="text-xs font-bold text-amber-500 uppercase tracking-widest absolute top-6">Tiếng Anh</span>
                     <h3 id="fc-en" class="text-4xl font-black text-slate-100 text-center break-words w-full">Word</h3>
                     <p class="text-xs text-slate-500 absolute bottom-6"><i class="fa-solid fa-hand-pointer mr-1"></i> Chạm để lật thẻ</p>
                 </div>
-                <!-- Mặt sau -->
                 <div class="absolute inset-0 w-full h-full bg-slate-900 rounded-3xl backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 border-4 border-slate-700">
                     <span class="text-xs font-bold text-slate-500 uppercase tracking-widest absolute top-6">Tiếng Việt</span>
                     <h3 id="fc-vi" class="text-3xl font-bold text-amber-400 text-center break-words w-full mb-4">Nghĩa</h3>
@@ -960,7 +985,7 @@
             </div>
         </div>
         <div class="px-6 py-4 border-t border-slate-800 bg-slate-800 flex justify-between items-center">
-            <span class="text-xs font-bold text-slate-500"><i class="fa-regular fa-clock mr-1"></i> Deadline: CN 21:00</span>
+            <span class="text-xs font-bold text-slate-500"><i class="fa-regular fa-clock mr-1"></i> Hãy chú ý deadline của tuần nhé!</span>
             <button class="btn-close-modal px-5 py-2 bg-slate-700 text-slate-200 rounded-xl hover:bg-slate-600 font-bold transition-colors">Đã hiểu</button>
         </div>
     </div>
@@ -996,6 +1021,7 @@
         let currentUser = null, userData = null, currentWeek = null, isInitializingDB = false, quillEditor = null, unsubscribers = [], teacherChartInstance = null, studentChartInstance = null;
         window.allMaterials = []; 
         window.currentStudentTasks = []; 
+        window.allWeeks = []; // Biến chứa tất cả các tuần để nhóm dữ liệu
 
         const USERS_SEED = [
             { username: 'admin.hamy', pass: 'HaMy@2025', name: 'Nguyễn Hà My', role: 'admin', class: null },
@@ -1072,7 +1098,6 @@
 
         function clearAllUnsubscribers() { unsubscribers.forEach(unsub => unsub()); unsubscribers = []; }
 
-        // ================= HÀM XỬ LÝ TÊN FILE (BỎ DẤU TIẾNG VIỆT VÀ KÝ TỰ ĐẶC BIỆT) =================
         function removeVietnameseTones(str) {
             str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
             str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
@@ -1088,9 +1113,7 @@
             str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
             str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
             str = str.replace(/Đ/g, "D");
-            // Xóa các ký tự đặc biệt, chỉ giữ lại chữ cái, số, dấu chấm và gạch dưới, khoảng trắng
             str = str.replace(/[^a-zA-Z0-9._ ]/g, "");
-            // Thay khoảng trắng bằng gạch dưới
             str = str.replace(/\s+/g, '_');
             return str;
         }
@@ -1218,6 +1241,7 @@
             const unsub = onSnapshot(query(collection(db, "weeks"), orderBy("startDate", "desc")), (snapshot) => {
                 let weeks = []; let openWeek = null;
                 snapshot.forEach(doc => { let d = { id: doc.id, ...doc.data() }; weeks.push(d); if (d.status === 'open') openWeek = d; });
+                window.allWeeks = weeks;
                 currentWeek = openWeek || weeks[0]; 
                 
                 if (currentWeek) {
@@ -1225,9 +1249,23 @@
                     if($('sd-current-week')) $('sd-current-week').innerText = currentWeek.name;
                     
                     let optionsHTML = weeks.map(w => `<option value="${w.id}">${w.name} ${w.status==='open'?'(Đang mở)':''}</option>`).join('');
-                    ['filter-material-week', 'filter-grade-week', 'filter-qa-week', 'filter-peer-week', 'um-week'].forEach(id => { if($(id)) { $(id).innerHTML = optionsHTML; $(id).value = currentWeek.id; } });
                     
-                    startCountdown(currentWeek.endDate);
+                    // Cập nhật các select box chứa tuần
+                    ['td-week-filter', 'filter-grade-week', 'filter-qa-week', 'filter-peer-week', 'um-week'].forEach(id => { 
+                        if($(id)) {
+                            // Lưu lại giá trị cũ nếu có
+                            let currentVal = $(id).value;
+                            $(id).innerHTML = optionsHTML; 
+                            // Nếu đang chọn tuần cũ thì giữ nguyên, không thì fallback về currentWeek
+                            if(currentVal && weeks.find(w => w.id === currentVal)) {
+                                $(id).value = currentVal;
+                            } else {
+                                $(id).value = currentWeek.id;
+                            }
+                        } 
+                    });
+                    
+                    startCountdown(); // Gọi hàm đếm ngược thông minh
                     if(userData.role === 'admin' || userData.role === 'teacher') renderWeeksTable(weeks);
                     if(unsubscribers.length === 1) setupListeners();
                 }
@@ -1235,12 +1273,16 @@
             unsubscribers.push(unsub);
         }
 
-        // ================= ĐÃ SỬA LỖI TRANG TRẮNG VÀ GỘP DANH SÁCH USERS VÀO ĐÂY =================
         function setupListeners() {
             unsubscribers.push(onSnapshot(collection(db, "submissions"), (snap) => {
                 let allSubs = []; snap.forEach(doc => allSubs.push({id: doc.id, ...doc.data()}));
+                window.allSubmissions = allSubs; // Lưu lại để dùng cho xuất Excel
+                
                 if(userData.role === 'admin' || userData.role === 'teacher') {
-                    renderTeacherDashboard(allSubs); renderGradingTable(allSubs);
+                    renderTeacherDashboard(allSubs); 
+                    $('td-week-filter').onchange = () => { renderTeacherDashboard(allSubs); startCountdown(); }; // Khi Admin đổi tuần -> render lại
+                    
+                    renderGradingTable(allSubs);
                     $('filter-grade-week').onchange = () => renderGradingTable(allSubs);
                     $('filter-grade-class').onchange = () => renderGradingTable(allSubs);
                     $('filter-grade-status').onchange = () => renderGradingTable(allSubs);
@@ -1255,7 +1297,8 @@
                 snap.forEach(doc => { let d = {id: doc.id, ...doc.data()}; mats.push(d); if(d.fileSize) totalSize += d.fileSize; });
                 if($('storage-used')) $('storage-used').innerText = (totalSize / (1024*1024)).toFixed(2) + " MB";
                 window.allMaterials = mats;
-                renderMaterials(mats); $('filter-material-week').onchange = () => renderMaterials(mats);
+                
+                renderMaterials(mats); 
                 if($('filter-material-class')) $('filter-material-class').onchange = () => renderMaterials(mats);
             }));
 
@@ -1272,83 +1315,179 @@
                     renderVocabulary();
                 }));
             } else {
-                // [FIX] Tải danh sách Users để đối chiếu Tên Học Sinh
                 unsubscribers.push(onSnapshot(collection(db, "users"), (snap) => {
                     window.allUsersDict = {};
-                    snap.forEach(doc => { 
-                        window.allUsersDict[doc.id] = doc.data(); 
-                    });
+                    snap.forEach(doc => { window.allUsersDict[doc.id] = doc.data(); });
                     renderTeacherVocabulary(); 
                 }));
 
-                // [FIX] Tải danh sách Từ vựng
                 unsubscribers.push(onSnapshot(collection(db, "vocabulary"), (snap) => {
                     window.allStudentVocabs = []; 
                     snap.forEach(doc => window.allStudentVocabs.push({id: doc.id, ...doc.data()}));
                     renderTeacherVocabulary(); 
                 }));
 
-                if(document.getElementById('filter-teacher-vocab-class')) {
-                    document.getElementById('filter-teacher-vocab-class').onchange = () => renderTeacherVocabulary();
-                }
+                if($('filter-teacher-vocab-class')) $('filter-teacher-vocab-class').onchange = () => renderTeacherVocabulary();
             }
         }
 
-        function startCountdown(endDateStr) {
+        // ================= SỬA LOGIC COUNTDOWN (HỖ TRỢ GIỜ TÙY CHỈNH) =================
+        function startCountdown() {
             if(window.countdownInterval) clearInterval(window.countdownInterval);
-            const end = new Date(endDateStr + "T21:00:00").getTime();
+            
             window.countdownInterval = setInterval(() => {
-                const distance = end - new Date().getTime(); window.isWeekLocked = distance < 0;
-                const text = window.isWeekLocked ? "ĐÃ HẾT HẠN" : `${Math.floor(distance / 86400000)}d ${Math.floor((distance % 86400000)/3600000).toString().padStart(2,'0')}:${Math.floor((distance % 3600000)/60000).toString().padStart(2,'0')}:${Math.floor((distance % 60000)/1000).toString().padStart(2,'0')}`;
+                const now = new Date().getTime();
                 
-                if($('td-countdown')) { $('td-countdown').innerText = text; if(window.isWeekLocked) $('td-countdown').classList.add('text-red-500'); }
-                if($('sd-countdown')) { $('sd-countdown').innerText = text; if(window.isWeekLocked) $('sd-countdown').classList.add('text-red-500'); }
+                // Logic cho Học sinh (Luôn xem tuần hiện tại)
+                if($('sd-countdown') && currentWeek) {
+                    let endStr = currentWeek.endDate;
+                    if(!endStr.includes('T')) endStr += "T21:00:00"; // Backward compatibility
+                    const end = new Date(endStr).getTime();
+                    
+                    const distance = end - now; 
+                    window.isWeekLocked = distance < 0 || currentWeek.status === 'closed';
+                    
+                    // Update Text Date
+                    const dateObj = new Date(endStr);
+                    $('sd-deadline-text').innerHTML = `<i class="fa-regular fa-clock mr-1.5 text-amber-500"></i> Deadline: ${dateObj.toLocaleDateString('vi-VN')} lúc ${dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
+
+                    const text = window.isWeekLocked ? "ĐÃ HẾT HẠN" : `${Math.floor(distance / 86400000)}d ${Math.floor((distance % 86400000)/3600000).toString().padStart(2,'0')}:${Math.floor((distance % 3600000)/60000).toString().padStart(2,'0')}:${Math.floor((distance % 60000)/1000).toString().padStart(2,'0')}`;
+                    $('sd-countdown').innerText = text; 
+                    
+                    if(window.isWeekLocked) {
+                        $('sd-countdown').classList.add('text-red-500');
+                        if ($('btn-submit-work')) {
+                            $('btn-submit-work').disabled = true; $('btn-submit-work').className = "w-full bg-slate-700 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl mt-2 text-lg"; $('sub-locked-msg').classList.remove('hidden');
+                        }
+                    } else {
+                        $('sd-countdown').classList.remove('text-red-500');
+                        if ($('btn-submit-work')) {
+                            $('btn-submit-work').disabled = false; $('btn-submit-work').className = "w-full bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 mt-2 text-lg"; $('sub-locked-msg').classList.add('hidden');
+                        }
+                    }
+                }
                 
-                if (window.isWeekLocked && $('btn-submit-work')) {
-                    $('btn-submit-work').disabled = true; $('btn-submit-work').className = "w-full bg-slate-700 text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-xl mt-2 text-lg"; $('sub-locked-msg').classList.remove('hidden');
-                } else if(!window.isWeekLocked && $('btn-submit-work')) {
-                    $('btn-submit-work').disabled = false; $('btn-submit-work').className = "w-full bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transform hover:-translate-y-1 font-bold py-3.5 rounded-xl transition-all duration-200 mt-2 text-lg"; $('sub-locked-msg').classList.add('hidden');
+                // Logic cho Giáo viên (Xem theo tuần đang chọn ở Dropdown)
+                if($('td-countdown') && $('td-week-filter')) {
+                    const selectedWeekId = $('td-week-filter').value;
+                    const selectedWeek = window.allWeeks.find(w => w.id === selectedWeekId);
+                    
+                    if(selectedWeek) {
+                        let endStr = selectedWeek.endDate;
+                        if(!endStr.includes('T')) endStr += "T21:00:00"; 
+                        const end = new Date(endStr).getTime();
+                        const distance = end - now;
+                        const isLocked = distance < 0 || selectedWeek.status === 'closed';
+
+                        const dateObj = new Date(endStr);
+                        $('td-deadline-text').innerText = `Hết hạn lúc: ${dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} ngày ${dateObj.toLocaleDateString('vi-VN')}`;
+
+                        const text = isLocked ? "ĐÃ HẾT HẠN" : `${Math.floor(distance / 86400000)}d ${Math.floor((distance % 86400000)/3600000).toString().padStart(2,'0')}:${Math.floor((distance % 3600000)/60000).toString().padStart(2,'0')}:${Math.floor((distance % 60000)/1000).toString().padStart(2,'0')}`;
+                        $('td-countdown').innerText = text;
+                        if(isLocked) $('td-countdown').classList.add('text-red-500'); else $('td-countdown').classList.remove('text-red-500');
+                    }
                 }
             }, 1000);
         }
 
-        // 8. ADMIN / TEACHER LOGIC
+        // 8. ADMIN / TEACHER LOGIC (QUẢN LÝ TUẦN)
         if($('btn-show-create-week')) {
             $('btn-show-create-week').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-create-week').classList.remove('hidden'); };
             $('form-create-week').onsubmit = async (e) => {
                 e.preventDefault();
                 try {
-                    await addDoc(collection(db, "weeks"), { name: $('cw-name').value, startDate: $('cw-start').value, endDate: $('cw-end').value, gradingScale: $('cw-scale').value, status: 'open', createdAt: serverTimestamp() });
+                    await addDoc(collection(db, "weeks"), { 
+                        name: $('cw-name').value, 
+                        startDate: $('cw-start').value, 
+                        endDate: $('cw-end').value, // Sẽ lưu dạng YYYY-MM-DDTHH:mm
+                        gradingScale: $('cw-scale').value, 
+                        status: 'open', 
+                        createdAt: serverTimestamp() 
+                    });
                     showToast("Tạo tuần học thành công!"); document.querySelector('#modal-create-week .btn-close-modal').click(); $('form-create-week').reset();
                 } catch (err) { showToast(err.message, "error"); }
             };
         }
 
+        // Cập nhật hàm Render Weeks Table (Thêm nút Sửa và định dạng lại Deadline)
         function renderWeeksTable(weeks) {
-            $('table-weeks').innerHTML = weeks.map(w => `
+            $('table-weeks').innerHTML = weeks.map(w => {
+                // Formatting Date cho đẹp
+                let startStr = new Date(w.startDate).toLocaleDateString('vi-VN');
+                let endRaw = w.endDate.includes('T') ? w.endDate : w.endDate + "T21:00:00";
+                let endObj = new Date(endRaw);
+                let endStr = `${endObj.toLocaleDateString('vi-VN')} lúc ${endObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
+
+                return `
                 <tr class="hover:bg-slate-700/50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-200">${w.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-slate-400">${w.startDate} - ${w.endDate} 21:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-400">${startStr} đến ${endStr}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-400">Thang ${w.gradingScale}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-3 py-1 inline-flex text-xs font-bold rounded-full border ${w.status === 'open' ? 'bg-green-900/30 text-green-400 border-green-800' : 'bg-slate-800 text-slate-500 border-slate-700'}">${w.status === 'open' ? 'Đang mở' : 'Đã khóa'}</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <!-- NÚT SỬA TUẦN -->
+                        <button onclick="editWeekModal('${w.id}')" class="text-blue-400 hover:text-blue-300 bg-blue-900/20 border border-blue-900/50 px-3 py-1.5 rounded-lg mr-2 font-bold"><i class="fa-solid fa-pen"></i></button>
+                        
                         <button onclick="toggleWeekStatus('${w.id}', '${w.status}')" class="text-amber-500 hover:text-amber-400 font-bold bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg mr-2">${w.status === 'open' ? 'Khóa form' : 'Mở lại'}</button>
                         ${userData.role === 'admin' ? `<button onclick="deleteWeek('${w.id}')" class="text-red-400 hover:text-red-300 bg-red-900/20 border border-red-900/50 px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
+
         window.toggleWeekStatus = async (id, currentStatus) => { await updateDoc(doc(db, "weeks", id), { status: currentStatus === 'open' ? 'closed' : 'open' }); showToast("Cập nhật thành công!"); };
         window.deleteWeek = async (id) => { if(confirm("Xóa vĩnh viễn Tuần học này?")) { await deleteDoc(doc(db, "weeks", id)); showToast("Đã xóa tuần!"); } };
 
-        function renderTeacherDashboard(allSubs) {
-            if(!currentWeek) return;
-            const totalStudents = 70; const currentWeekSubs = allSubs.filter(s => s.weekId === currentWeek.id);
-            $('td-total-students').innerText = totalStudents; $('td-submitted').innerText = currentWeekSubs.length; $('td-not-submitted').innerText = totalStudents - currentWeekSubs.length;
+        // LOGIC SỬA TUẦN (MỚI)
+        window.editWeekModal = (id) => {
+            const w = window.allWeeks.find(x => x.id === id);
+            if(!w) return;
+            $('ew-id').value = w.id;
+            $('ew-name').value = w.name;
+            $('ew-start').value = w.startDate;
             
-            const submittedUsernames = currentWeekSubs.map(s => s.studentUsername);
+            // Xử lý dữ liệu cũ để set vào input datetime-local
+            let endVal = w.endDate;
+            if(!endVal.includes('T')) endVal += "T21:00"; 
+            $('ew-end').value = endVal;
+            
+            $('ew-scale').value = w.gradingScale || '10';
+
+            $('modal-backdrop').classList.remove('hidden'); 
+            $('modal-edit-week').classList.remove('hidden');
+        };
+
+        $('form-edit-week').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = $('ew-id').value;
+            try {
+                await updateDoc(doc(db, "weeks", id), {
+                    name: $('ew-name').value,
+                    startDate: $('ew-start').value,
+                    endDate: $('ew-end').value,
+                    gradingScale: $('ew-scale').value
+                });
+                showToast("Cập nhật Tuần thành công!");
+                document.querySelector('#modal-edit-week .btn-close-modal').click();
+            } catch (err) { showToast(err.message, "error"); }
+        }
+
+        // Cập nhật Render Teacher Dashboard để lấy số liệu theo dropdown
+        function renderTeacherDashboard(allSubs) {
+            if(!window.allWeeks || window.allWeeks.length === 0) return;
+            
+            const selectedWeekId = $('td-week-filter').value || currentWeek.id;
+            
+            const totalStudents = 70; 
+            const weekSubs = allSubs.filter(s => s.weekId === selectedWeekId);
+            
+            $('td-total-students').innerText = totalStudents; 
+            $('td-submitted').innerText = weekSubs.length; 
+            $('td-not-submitted').innerText = totalStudents - weekSubs.length;
+            
+            const submittedUsernames = weekSubs.map(s => s.studentUsername);
             const missing = USERS_SEED.filter(u => u.role === 'student' && !submittedUsernames.includes(u.username));
             
             $('td-missing-list').innerHTML = missing.map(m => `
@@ -1366,12 +1505,14 @@
                     if(c > 0) { if(!weekScores[s.weekId]) weekScores[s.weekId] = []; weekScores[s.weekId].push(t/c); }
                 }
             });
-            const weekOptions = Array.from($('filter-grade-week').options).reverse();
+            // Chart vẫn hiển thị tất cả các tuần cho dễ nhìn tổng quan
+            const weekOptions = Array.from($('td-week-filter').options).reverse();
             const labels = weekOptions.map(o => o.text.replace(' (Đang mở)',''));
             const data = weekOptions.map(o => weekScores[o.value] ? weekScores[o.value].reduce((a,b)=>a+b,0)/weekScores[o.value].length : 0);
             
             teacherChartInstance = new Chart($('teacher-chart').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Điểm TB', data: data, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } } }, plugins: { legend: { labels: { color: '#f8fafc' } } } } });
         }
+
 
         $('btn-show-upload-material').onclick = () => { $('modal-backdrop').classList.remove('hidden'); $('modal-upload-material').classList.remove('hidden'); };
         $('form-upload-material').onsubmit = async (e) => {
@@ -1407,25 +1548,54 @@
             finally { btn.disabled = false; btn.innerHTML = 'Xác nhận đăng tài liệu'; $('um-progress-container').classList.add('hidden'); }
         };
 
+        // ================= SỬA LOGIC HIỂN THỊ TÀI LIỆU (CHIA THEO TUẦN) =================
         function renderMaterials(materials) {
-            const w = $('filter-material-week').value; const c = $('filter-material-class') ? $('filter-material-class').value : 'ALL';
-            let filtered = materials.filter(m => m.weekId === w && (userData.role === 'student' ? (m.class === 'ALL' || m.class === userData.class) : (c === 'ALL' || m.class === c || m.class === 'ALL')));
-            window.currentFilteredMaterials = filtered; 
+            const c = $('filter-material-class') ? $('filter-material-class').value : 'ALL';
             const icons = { listening: 'fa-headphones text-blue-400', speaking: 'fa-microphone text-orange-400', reading: 'fa-book-open text-green-400', writing: 'fa-pen text-purple-400', vocabulary: 'fa-spell-check text-amber-400' };
             
-            $('grid-materials-teacher').innerHTML = filtered.map(m => `
-                <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 hover:border-amber-500/50 transition-all group relative">
-                    <div class="flex items-start gap-4">
-                        <div class="p-3 bg-slate-900 rounded-xl border border-slate-700 group-hover:bg-amber-900/20 transition-colors"><i class="fa-solid ${icons[m.type]} text-xl"></i></div>
-                        <div class="flex-1 overflow-hidden">
-                            <h4 class="font-bold text-slate-100 text-sm truncate" title="${m.title}">${m.title}</h4>
-                            <p class="text-xs text-slate-500 mt-1 font-medium">Lớp: ${m.class === 'ALL' ? 'Chung' : m.class}</p>
-                            <a href="${m.fileUrl}" ${m.fileType==='upload' ? 'download' : 'target="_blank"'} class="inline-block mt-3 text-[13px] font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg hover:bg-amber-900/40"><i class="fa-solid ${m.fileType==='link' ? 'fa-link' : 'fa-download'} mr-1"></i>${m.fileType==='link' ? 'Mở Link' : 'Tải xuống'}</a>
+            let htmlContainer = '';
+            window.currentFilteredMaterials = []; // Lưu lại để dùng cho ZIP download
+
+            // Lặp qua tất cả các tuần để vẽ UI (Sắp xếp tuần mới nhất lên đầu)
+            window.allWeeks.forEach(w => {
+                // Lọc tài liệu thuộc tuần này và thuộc lớp được chọn
+                let weekMats = materials.filter(m => m.weekId === w.id && (userData.role === 'student' ? (m.class === 'ALL' || m.class === userData.class) : (c === 'ALL' || m.class === c || m.class === 'ALL')));
+                
+                if(weekMats.length > 0) {
+                    window.currentFilteredMaterials.push(...weekMats); // Add vào array zip
+                    
+                    let gridHtml = weekMats.map(m => `
+                        <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 hover:border-amber-500/50 transition-all group relative">
+                            <div class="flex items-start gap-4">
+                                <div class="p-3 bg-slate-900 rounded-xl border border-slate-700 group-hover:bg-amber-900/20 transition-colors"><i class="fa-solid ${icons[m.type]} text-xl"></i></div>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="font-bold text-slate-100 text-sm truncate" title="${m.title}">${m.title}</h4>
+                                    <p class="text-xs text-slate-500 mt-1 font-medium">Lớp: ${m.class === 'ALL' ? 'Chung' : m.class}</p>
+                                    <a href="${m.fileUrl}" ${m.fileType==='upload' ? 'download' : 'target="_blank"'} class="inline-block mt-3 text-[13px] font-bold text-amber-400 bg-amber-900/20 border border-amber-900/50 px-3 py-1.5 rounded-lg hover:bg-amber-900/40"><i class="fa-solid ${m.fileType==='link' ? 'fa-link' : 'fa-download'} mr-1"></i>${m.fileType==='link' ? 'Mở Link' : 'Tải xuống'}</a>
+                                </div>
+                            </div>
+                            ${userData.role === 'admin' ? `<button onclick="deleteMaterial('${m.id}', '${m.fileType}', '${m.fileUrl}')" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 bg-slate-900 border border-slate-700 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
                         </div>
-                    </div>
-                    ${userData.role === 'admin' ? `<button onclick="deleteMaterial('${m.id}', '${m.fileType}', '${m.fileUrl}')" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 bg-slate-900 border border-slate-700 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
-                </div>
-            `).join('') || '<p class="text-slate-500 col-span-full py-10 text-center font-medium">Chưa có tài liệu nào trong tuần này.</p>';
+                    `).join('');
+
+                    htmlContainer += `
+                        <div class="mb-8 bg-slate-900/30 p-6 rounded-3xl border border-slate-800/50">
+                            <h3 class="text-xl font-black text-amber-500 mb-4 border-b border-slate-700/50 pb-2 flex items-center">
+                                <i class="fa-solid fa-folder-open mr-3"></i>Tài liệu ${w.name}
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                ${gridHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if(htmlContainer === '') {
+                htmlContainer = '<div class="text-center py-16 text-slate-500 font-medium bg-slate-900/30 rounded-3xl border border-slate-800/50"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i><p>Chưa có tài liệu học tập nào.</p></div>';
+            }
+
+            $('grouped-materials-container').innerHTML = htmlContainer;
         }
 
         window.deleteMaterial = async (id, type, url) => {
@@ -1445,7 +1615,9 @@
             btn.disabled = true;
 
             const zip = new JSZip();
-            const folderName = `Tai_lieu_T${$('filter-material-week').options[$('filter-material-week').selectedIndex].text.replace(/\s+/g, '_')}`;
+            // Đổi tên thư mục ZIP vì giờ đang tải của nhiều tuần
+            let classNameStr = $('filter-material-class') ? $('filter-material-class').value : 'ALL';
+            const folderName = `Tai_lieu_${classNameStr}`;
             const folder = zip.folder(folderName);
             let hasFiles = false;
 
@@ -1456,7 +1628,11 @@
                             const response = await fetch(m.fileUrl);
                             if (!response.ok) throw new Error("Network response was not ok");
                             const blob = await response.blob();
-                            folder.file(m.fileName || `${m.title}.file`, blob);
+                            
+                            // Nén file vào thư mục con theo tuần
+                            let weekName = window.allWeeks.find(w => w.id === m.weekId)?.name || 'Khac';
+                            let safeWeekName = removeVietnameseTones(weekName);
+                            folder.folder(safeWeekName).file(m.fileName || `${m.title}.file`, blob);
                             hasFiles = true;
                         } catch (err) {
                             console.warn(`Lỗi khi tải file ${m.title}:`, err);
@@ -1488,6 +1664,64 @@
                 showToast("Đã đặt yêu cầu Reset thành công!");
             } catch(e) { showToast(e.message, "error"); }
         }
+
+        // ================= XUẤT EXCEL TẠI MODULE CHẤM ĐIỂM =================
+        $('btn-export-excel').addEventListener('click', () => {
+            if(!window.allSubmissions) return showToast("Dữ liệu chưa tải xong", "error");
+            
+            const w = $('filter-grade-week').value; 
+            const c = $('filter-grade-class').value;
+            const weekObj = window.allWeeks.find(x => x.id === w);
+            const weekName = weekObj ? weekObj.name : 'Unknown';
+
+            // Lọc dữ liệu theo đúng bộ lọc trên màn hình
+            let filtered = window.allSubmissions.filter(s => s.weekId === w); 
+            if(c !== 'ALL') filtered = filtered.filter(s => s.class === c);
+            
+            if(filtered.length === 0) return showToast("Không có dữ liệu để xuất", "error");
+
+            // Build mảng Data cho Excel
+            const excelData = filtered.map((s, index) => {
+                let g = s.grades || {};
+                
+                // Tính điểm trung bình (nếu có điểm)
+                let total = 0; let count = 0;
+                ['listening', 'speaking', 'reading', 'writing', 'vocabulary'].forEach(k => { 
+                    if(g[k]) { total += Number(g[k]); count++; } 
+                });
+                let average = count > 0 ? (total / count).toFixed(2) : '';
+
+                return {
+                    "STT": index + 1,
+                    "Tuần": weekName,
+                    "Lớp": s.class,
+                    "Họ và Tên": s.studentName,
+                    "Listening": g.listening || '',
+                    "Speaking": g.speaking || '',
+                    "Reading": g.reading || '',
+                    "Writing": g.writing || '',
+                    "Vocab": g.vocabulary || '',
+                    "Tổng Điểm (TB)": average,
+                    "Nhận xét của Giáo viên": s.feedback || ''
+                };
+            });
+
+            // Sử dụng SheetJS tạo Worksheet và Workbook
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Auto size columns cho đẹp
+            const wscols = [ {wch:5}, {wch:15}, {wch:10}, {wch:25}, {wch:10}, {wch:10}, {wch:10}, {wch:10}, {wch:10}, {wch:15}, {wch:50} ];
+            worksheet['!cols'] = wscols;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Diem_So");
+
+            // Tải file
+            let safeWeekName = removeVietnameseTones(weekName);
+            let fileName = `Bang_Diem_${safeWeekName}_Lop_${c}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            showToast("Đã xuất file Excel!");
+        });
 
         function renderGradingTable(subs) {
             const w = $('filter-grade-week').value; const c = $('filter-grade-class').value; const st = $('filter-grade-status').value;
@@ -1550,7 +1784,6 @@
             } catch(err) { showToast("Lỗi: " + err.message, "error"); }
         }
 
-        // ================= [ĐÃ SỬA LỖI TRANG TRẮNG] QUẢN LÝ TỪ VỰNG =================
         function renderTeacherVocabulary() {
             if(!window.allStudentVocabs || !document.getElementById('table-teacher-vocab')) return;
             const c = document.getElementById('filter-teacher-vocab-class') ? document.getElementById('filter-teacher-vocab-class').value : 'ALL';
@@ -1559,7 +1792,6 @@
                 let sName = v.studentName;
                 let sClass = v.studentClass;
                 
-                // Nếu thiếu thông tin, tìm đối chiếu từ UserID
                 if((!sName || !sClass) && window.allUsersDict && v.studentId) {
                     let user = window.allUsersDict[v.studentId];
                     if(user) {
@@ -1574,7 +1806,6 @@
             if(c !== 'ALL') filtered = filtered.filter(v => v.displayStudentClass === c);
 
             document.getElementById('table-teacher-vocab').innerHTML = filtered.map(v => {
-                // Ép kiểu String an toàn để tránh lỗi khi người dùng nhập số (TypeError replace is not a function)
                 let enSafe = String(v.en || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 let viSafe = String(v.vi || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 let exSafe = String(v.ex || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -1776,9 +2007,7 @@
         }
         window.deleteVocab = async (id) => { if(confirm("Xóa từ này khỏi kho dữ liệu?")) await deleteDoc(doc(db, "vocabulary", id)); };
 
-        // ================= TÍNH NĂNG FLASHCARD =================
         let fcIndex = 0; let isFlipped = false;
-
         function updateFlashcardUI() {
             if(!window.studentVocabs || window.studentVocabs.length === 0) return;
             const card = window.studentVocabs[fcIndex];
@@ -1795,7 +2024,6 @@
         $('btn-fc-flip').onclick = () => { isFlipped = !isFlipped; if(isFlipped) $('btn-fc-flip').classList.add('flipped'); else$('btn-fc-flip').classList.remove('flipped'); };
         $('btn-fc-prev').onclick = (e) => { e.stopPropagation(); if(fcIndex > 0) { fcIndex--; updateFlashcardUI(); } };$('btn-fc-next').onclick = (e) => { e.stopPropagation(); if(fcIndex < window.studentVocabs.length - 1) { fcIndex++; updateFlashcardUI(); } };
 
-        // ================= TÍNH NĂNG QUIZ TRẮC NGHIỆM =================
         let quizQuestions = []; let currentQIndex = 0; let quizScore = 0;
         function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
 
